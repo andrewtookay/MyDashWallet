@@ -21,7 +21,6 @@ export class ReceiveDash extends Component {
 		var addressLink =
 			'https://' +
 			this.props.explorer +
-			(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 			'/address/' +
 			this.props.lastUnusedAddress
 		return (
@@ -56,7 +55,6 @@ export class ReceiveDash extends Component {
 									href={
 										'https://' +
 										this.props.explorer +
-										(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 										'/address/' +
 										a
 									}

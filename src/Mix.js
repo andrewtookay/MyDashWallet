@@ -2,12 +2,12 @@ import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 import SkyLight from 'react-skylight'
 import * as send from './send.js'
-import { Mnemonic, Transaction } from '@dashevo/dashcore-lib'
+import { Mnemonic, Transaction } from 'alterdot-lib'
 import { animateScroll } from 'react-scroll'
 import styled from 'styled-components'
 
 const SupportedDenominationAmount = 0.0100001
-var txFee = 192 * send.DASH_PER_DUFF
+var txFee = 1920 * send.DASH_PER_DUFF
 var apiUrl = 'https://old.mydashwallet.org/'
 const Output = styled.div`
 	width: 100%;
@@ -155,7 +155,7 @@ export class Mix extends Component {
 		}
 		var component = this
 		fetch(
-			'https://insight.dash.org/insight-api/addr/' +
+			'https://insight.alterdot.network/insight-api/addr/' +
 				addressesWithUnspendInputs[addressesWithUnspendInputsIndex].address +
 				'/utxo',
 			{
@@ -482,7 +482,7 @@ export class Mix extends Component {
 		for (var key of Object.keys(this.props.addressBalances))
 			if (this.props.addressBalances[key] === SupportedDenominationAmount)
 				promises.push(
-					fetch('https://insight.dash.org/insight-api/addr/' + key + '/utxo', {
+					fetch('https://insight.alterdot.network/insight-api/addr/' + key + '/utxo', {
 						mode: 'cors',
 						cache: 'no-cache',
 					})

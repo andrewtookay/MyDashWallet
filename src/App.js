@@ -9,7 +9,7 @@ import { ScriptHack } from './ScriptHack'
 import { LoggedIn } from './LoggedIn'
 import { Login } from './Login'
 import CryptoJS from 'crypto-js'
-import { Mnemonic } from '@dashevo/dashcore-lib'
+import { Mnemonic } from 'alterdot-lib'
 import ReactGA from 'react-ga'
 import styled from 'styled-components'
 import './all.css'
@@ -117,10 +117,10 @@ export default class App extends Component {
 			addresses
 		)
 			this.state = {
-				priceUsd: 112.5,
-				priceEur: 103.1,
-				priceGbp: 97.1,
-				priceBtc: 0.01,
+				priceUsd: 0.02,
+				priceEur: 0.018,
+				priceGbp: 0.015,
+				priceBtc: 0.00000040,
 				encryptedPasswordHash: encryptedPasswordHash,
 				hdSeedE: hdSeedE,
 				totalBalance: totalBalance,
@@ -128,20 +128,20 @@ export default class App extends Component {
 				loading: false,
 				mode: this.getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
-				explorer: 'insight.dash.org',
+				explorer: 'insight.alterdot.network',
 			}
 		else
 			this.state = {
-				priceUsd: 112.5,
-				priceEur: 103.1,
-				priceGbp: 97.1,
-				priceBtc: 0.01,
+				priceUsd: 0.02,
+				priceEur: 0.018,
+				priceGbp: 0.015,
+				priceBtc: 0.00000040,
 				totalBalance: 0,
 				addresses: [],
 				hdSeedE: hdSeedE, //allow login again from stored encrypted seed, password is unknown and must match hash
 				mode: this.getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
-				explorer: 'insight.dash.org',
+				explorer: 'insight.alterdot.network',
 			}
 		window.onpopstate = () => {
 			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl())
@@ -163,6 +163,8 @@ export default class App extends Component {
 				*/
 		// If coinmarketcap api was blocked by adblocker or is not longer responding prices, use fallback
 		//https://stackoverflow.com/questions/54904517/coinmarketcap-api-blocked-by-adblock
+		// TODO_ADOT_MEDIUM
+		/*
 		fetch('https://old.mydashwallet.org/getPrice', {
 			mode: 'cors',
 			cache: 'no-cache',
@@ -176,7 +178,7 @@ export default class App extends Component {
 					priceBtc: data.price_btc,
 				})
 			})
-		//})
+		//})*/
 		ReactGA.initialize('UA-25232431-3')
 		ReactGA.pageview('/')
 	}
@@ -500,7 +502,7 @@ export default class App extends Component {
 							<br />${this.showNumber(this.state.priceUsd / 1000.0, 2)}
 							<br />€{this.showNumber(this.state.priceEur / 1000.0, 2)}
 							<br />
-							Tx:${this.showNumber(this.state.priceUsd * 0.00000226, 5)}
+							Tx:${this.showNumber(this.state.priceUsd * 0.00002260, 5)}
 						</div>
 					)}
 				</DashPricePanel>

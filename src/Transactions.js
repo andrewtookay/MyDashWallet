@@ -34,6 +34,7 @@ export class Transactions extends Component {
 	}
 	renderAllTransactions = (transactions, fullSize) => {
 		var twoMinutesAgo = new Date(new Date().getTime() + 2 * 60000)
+		console.log(transactions);
 		return (
 			<div id="transactions">
 				<table style={{ tableLayout: 'fixed', width: '100%' }}>
@@ -59,7 +60,6 @@ export class Transactions extends Component {
 												href={
 													'https://' +
 													this.props.explorer +
-													(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 													(this.props.explorer === 'blockchair.com/dash'
 														? '/transaction/'
 														: '/tx/') +

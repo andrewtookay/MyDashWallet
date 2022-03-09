@@ -5,7 +5,7 @@ import { Balances } from './Balances'
 import { SendDash } from './SendDash'
 import { ReceiveDash } from './ReceiveDash'
 import { Transactions } from './Transactions'
-import { Mnemonic } from '@dashevo/dashcore-lib'
+import { Mnemonic } from 'alterdot-lib'
 import SkyLight from 'react-skylight'
 import { NotificationContainer, NotificationManager } from 'react-notifications'
 import 'react-notifications/lib/notifications.css'
@@ -19,7 +19,7 @@ export class LoggedIn extends Component {
 			addresses: props.addresses,
 			transactions: [],
 			skipInitialTransactionsNotifications: true,
-			skipEmptyAddresses: true,
+			skipEmptyAddresses: false, // TODO_ADOT_MEDIUM not needed as we don't create new addresses continuously
 			password: props.rememberPassword || '',
 			lastUnusedAddress:
 				props.addresses && props.addresses.length > 0
@@ -130,6 +130,7 @@ export class LoggedIn extends Component {
 	}
 	// Loops through all known Dash addresses and checks the balance and sums up to total amount we got
 	balanceCheck = () => {
+		console.log("balanceCheck:", this.props.addressBalances);
 		for (var addressToCheck of Object.keys(this.props.addressBalances))
 			if (this.isValidDashAddress(addressToCheck) && !this.skipOldEmptyAddresses(addressToCheck))
 				this.updateAddressBalance(addressToCheck, this.props.addressBalances[addressToCheck])
@@ -156,7 +157,7 @@ export class LoggedIn extends Component {
 		return (
 			address &&
 			address.length >= 34 &&
-			(address[0] === 'X' || address[0] === 'x' || address[0] === '7')
+			(address[0] === 'C' || address[0] === '5')
 		)
 	}
 	updateAddressBalance = (addressToCheck, oldBalance) => {
@@ -196,9 +197,10 @@ export class LoggedIn extends Component {
 					// This is the last address in our list? And it has received something, then add the next one at the end
 					var lastUnusedAddress = this.state.addresses[this.state.addresses.length - 1]
 					//var lastUsedAddress = this.state.addresses.length > 1 ? this.state.addresses[this.state.addresses.length - 2] : lastUnusedAddress
+					// ADOT_COMMENT after the last generated address was used a new one is generated, kind of annoying behaviour
 					if (
 						addressToCheck === lastUnusedAddress &&
-						(newBalance > 0 || parseFloat(data.totalReceived) > 0 || data.received > 0)
+						(newBalance > 0 || parseFloat(data.totalReceived) > 0 || data.received > 0) && false // added this false to cancel this
 					) {
 						if (this.props.trezor) {
 							//not needed in wallet mode, horrible user experience having to confirm each address, we have all addresses already for trezor!
@@ -227,6 +229,10 @@ export class LoggedIn extends Component {
 						if (rememberToUpdateTotalAmount)
 							component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses()
 					}
+					// This is the last address in our list so we should also update the total balance
+					var lastAddress = this.state.addresses[this.state.addresses.length - 1]
+					if (addressToCheck === lastAddress)
+					component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses();
 				}
 			})
 			.catch(error => console.log(error))

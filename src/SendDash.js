@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
 import QrReader from 'react-qr-reader'
-import { Mnemonic, Transaction } from '@dashevo/dashcore-lib'
+import { Mnemonic, Transaction } from 'alterdot-lib'
 import { NotificationManager } from 'react-notifications'
 import TrezorConnect from 'trezor-connect'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,7 +10,7 @@ import SkyLight from 'react-skylight'
 import * as send from './send.js'
 
 var lastKnownNumberOfInputs = 1
-var txFee = 192 * send.DASH_PER_DUFF
+var txFee = 2260 * send.DASH_PER_DUFF
 const Panel = styled.div`
 	float: left;
 	width: 48%;
@@ -72,7 +72,8 @@ export class SendDash extends Component {
 			this.addNextAddressWithUnspendFundsToRawTx(
 				this.getAddressesWithUnspendFunds(),
 				0,
-				this.props.getUnusedAddress(),
+				this.props.addresses[0], // TODO_ADOT_MEDIUM change goes into the first/main address
+				// this.props.getUnusedAddress(), // ADOT_COMMENT always getting another address for change, unwanted behaviour
 				0,
 				[],
 				[],
@@ -134,7 +135,7 @@ export class SendDash extends Component {
 			// Try to figure out how many inputs we would need if we have multiple addresses
 			numberOfInputs = 0
 			var amountToCheck = this.state.amountToSend
-			for (var address of Object.keys(this.props.addressBalances)) {
+			for (var address of Object.keys(this.props.addressBalances)) { // TODO_ADOT_MEDIUM this only takes into account the number of addresses, not actual inputs
 				var amount = this.props.addressBalances[address]
 				if (amount > 0 && amountToCheck > 0.00000001) {
 					numberOfInputs++
@@ -144,10 +145,10 @@ export class SendDash extends Component {
 			if (numberOfInputs === 0) numberOfInputs = lastKnownNumberOfInputs
 		}
 		lastKnownNumberOfInputs = numberOfInputs
-		// mDASH tx fee with 1 duff/byte with default 226 byte tx for 1 input, 374 for 2 inputs (78+148*
-		// inputs). All this is recalculated below and on the server side once number of inputs is known.
-		txFee = (0.00078 + 0.00148 * numberOfInputs) / 1000
-		if (!txFee) txFee = 192 * send.DASH_PER_DUFF
+		// mADOT tx fee with 10 dots/byte with default 226 byte tx for 1 input, 374 for 2 inputs (78+148*
+		// inputs). All this is recalculated below and on the server side once number of inputs is known. TODO_ADOT_HIGH update comments
+		txFee = (0.0078 + 0.0148 * numberOfInputs) / 1000
+		if (!txFee) txFee = 1920 * send.DASH_PER_DUFF
 		/*
 		// PrivateSend number of needed inputs depends on the amount, not on the inputs (fee for that
 		// is already calculated above). Details on the /AboutPrivateSend help page
@@ -167,6 +168,7 @@ export class SendDash extends Component {
 		this.updateTxFee(txToUse.length)
 		// Some users had problems with strings being added, make sure we only have numbers here!
 		var totalAmountNeeded = parseFloat(this.state.amountToSend) + parseFloat(txFee)
+		console.log(totalAmountNeeded, txFee);
 		// If we send everything, subtract txFee so we can actually send everything
 		if (totalAmountNeeded >= this.props.totalBalance)
 			totalAmountNeeded = parseFloat(this.props.totalBalance)
@@ -180,7 +182,8 @@ export class SendDash extends Component {
 		txToUse,
 		txOutputIndexToUse,
 		txAddressPathIndices,
-		inputListText
+		inputListText,
+		utxosToSpend = []
 	) => {
 		if (addressesWithUnspendInputsIndex >= addressesWithUnspendInputs.length) {
 			NotificationManager.error('Insufficient funds')
@@ -220,6 +223,7 @@ export class SendDash extends Component {
 						]
 				var thisAddressAmountToUse = 0
 				var totalAmountNeeded = component.getTotalAmountNeededByRecalculatingTxFee(txToUse)
+				console.log("utxos:", utxos);
 				for (var i = 0; i < utxos.length; i++) {
 					var amount = isBlockchair ? utxos[i]['value'] * send.DASH_PER_DUFF : utxos[i]['amount']
 					if (amount >= send.DUST_AMOUNT_INPUTS_IN_DASH) {
@@ -230,36 +234,69 @@ export class SendDash extends Component {
 						)
 						thisAddressAmountToUse += amount
 						txAmountTotal += amount
-						totalAmountNeeded = component.getTotalAmountNeededByRecalculatingTxFee(txToUse)
+						utxosToSpend.push(new Transaction.UnspentOutput({
+							txId: utxos[i].txid,
+							outputIndex: utxos[i].vout,
+							address: utxos[i].address,
+							script: utxos[i].scriptPubKey, // add check, make sure Script.fromAddress(address) === utxos[index].scriptPubKey
+							satoshis: utxos[i].satoshis
+						}));
+						totalAmountNeeded = component.getTotalAmountNeededByRecalculatingTxFee(txToUse);
+						console.log("here0", txAmountTotal, totalAmountNeeded, txFee);
 						if (txAmountTotal >= totalAmountNeeded) break
+						console.log("here1");
 					}
 				}
 				inputListText +=
 					'https://' +
 					this.props.explorer +
-					(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 					'/address/' +
 					address +
 					' (-' +
 					component.props.showDashNumber(thisAddressAmountToUse) +
 					')'
 				// Add extra offset in case we are very close to the txFee with total amount!
-				if (txAmountTotal >= totalAmountNeeded - txFee * 2) {
+				if (txAmountTotal >= totalAmountNeeded - txFee * 2) { // TODO_ADOT_COMMENT with our wallet calculations will happen locally so we need exact numbers
+					// the user must know how much gets sent and how much is spent on fees
+
 					// We have all the inputs we need, we can now create the raw tx
 					//$("#transactionPanel").show();
 					//debug: inputListText += "<li>Done, got all inputs we need:</li>";
+					/* ADOT dev
 					var utxosTextWithOutputIndices = ''
 					for (var index = 0; index < txToUse.length; index++) {
 						//debug: inputListText += "<li>"+txToUse[index]+", "+txOutputIndexToUse[index]+"</li>";
 						utxosTextWithOutputIndices += txToUse[index] + '|' + txOutputIndexToUse[index] + '|'
 					}
+					*/
 					var sendTo = component.state.destinationAddress
 					//var usePrivateSend = false //TODO: $("#usePrivateSend").is(':checked');
 					// Update amountToSend in case we had to reduce it a bit to allow for the txFee
-					var amountToSend = totalAmountNeeded - txFee
+					var amountToSend = component.props.showNumber(totalAmountNeeded - txFee, 8) // totalAmountNeeded is amountToSend + txFee so this seems useless?
 					if (component.state.amountToSend !== amountToSend) component.setState({ amountToSend })
-					var remainingDash = txAmountTotal - totalAmountNeeded
-					fetch('https://old.mydashwallet.org/generateTx', {
+					//var remainingDash = txAmountTotal - totalAmountNeeded
+					var tx = new Transaction();
+					console.log("txToUse: " + txToUse + " txOutputIndexToUse: " + txOutputIndexToUse + " sendTo: " + sendTo + " amountToSend: " + component.props.showNumber(amountToSend, 8) +
+					" remainingAddress: " + remainingAddress);
+
+					console.log(utxosToSpend);
+					tx.from(utxosToSpend);
+					console.log("amountToSend pre-parseInt: " + (amountToSend * 100000000).toFixed(0));
+					amountToSend = parseInt((amountToSend * 100000000).toFixed(0));
+					console.log("amountToSend", amountToSend);
+					tx.to(sendTo, amountToSend); // TODO_ADOT_MEDIUM safe ADOT to satoshis/dots
+					console.log("here0");
+					tx.change(remainingAddress);
+					console.log("here1");
+					tx.fee(txFee * 100000000);
+					console.log("here2");
+					console.log(tx);
+
+					// TODO_ADOT_HIGH end of first method, display tx fee info
+
+					tx.sign(this.getDashHDWalletPrivateKeys());
+					this.sendSignedRawTx(tx.serialize()); // TODO_ADOT_HIGH error checks
+					/*fetch('https://old.mydashwallet.org/generateTx', {
 						mode: 'cors',
 						cache: 'no-cache',
 						method: 'POST',
@@ -292,7 +329,6 @@ export class SendDash extends Component {
 										component.props.showDashNumber(remainingDash) +
 										' will be send to your own receiving address: https://' +
 										this.props.explorer +
-										(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 										'/address/' +
 										remainingAddress
 								)
@@ -317,7 +353,7 @@ export class SendDash extends Component {
 							component.setState({
 								error: 'Server Error: ' + (serverError.message || serverError),
 							})
-						})
+						})*/
 					return
 				}
 				// Not done yet, get next address
@@ -331,7 +367,8 @@ export class SendDash extends Component {
 						txToUse,
 						txOutputIndexToUse,
 						txAddressPathIndices,
-						inputListText
+						inputListText,
+						utxosToSpend
 					)
 				else {
 					NotificationManager.error('Insufficient funds')
@@ -492,6 +529,59 @@ export class SendDash extends Component {
 		else if (error.errorCode) errorText = 'Unknown ' + errorText
 		return errorText
 	}
+	sendSignedRawTx = signedRawTx => {
+		var component = this
+		fetch('https://insight.alterdot.network/insight-api/tx/send', {
+			mode: 'cors',
+			cache: 'no-cache',
+			method: 'POST',
+			body: JSON.stringify({ rawtx: signedRawTx }),
+			headers: { 'Content-Type': 'application/json' },
+		})
+			.then(component.handleErrorsText)
+			.then(finalTx => {
+				var ret = JSON.parse(finalTx);
+				// amountToSend and txFee might get here as strings
+				var sentAmount = parseFloat(component.state.amountToSend);
+				txFee = parseFloat(txFee);
+
+				component.setState({
+					error: '',
+					password: '',
+					sendTransaction: ret.txid,
+					amountToSend: 0,
+				});
+				NotificationManager.success(
+					'Sent ' +
+						component.props.showDashNumber(sentAmount) +
+						' to ' +
+						component.state.destinationAddress,
+					'Success'
+				);
+				var amountChange = component.props.addresses.includes(component.state.destinationAddress) ? - txFee : - (sentAmount + txFee);
+				var newBalance = parseFloat(component.props.totalBalance) + amountChange;
+
+				if (newBalance < send.DUST_AMOUNT_IN_DASH) newBalance = 0;
+				//NotificationManager.info('New balance: ' + component.props.showDashNumber(newBalance));
+				component.props.setNewTotalBalance(newBalance);
+				component.successSendDialog.show();
+				console.log(component.props.addresses, component.state.destinationAddress);
+				component.props.addTransaction({
+					id: ret.txid,
+					amountChange: amountChange,
+					time: new Date(),
+					confirmations: 0,
+					size: txFee * 10000000, // 10000 satoshis/kb and size is in bytes
+					fees: txFee,
+					txlock: true,
+				});
+				component.props.onUpdateBalanceAndAddressesStorage(newBalance, component.props.addresses)
+			})
+			.catch(function(serverError) {
+				NotificationManager.error('Server Error')
+				component.setState({ error: 'Server Error: ' + (serverError.message || serverError) })
+			})
+	}
 	sendSignedTx = signedTx => {
 		var component = this
 		fetch('https://old.mydashwallet.org/sendTx', {
@@ -554,8 +644,8 @@ export class SendDash extends Component {
 			// we need to recreate the whole transaction: https://github.com/bitpay/bitcore/issues/1199
 			var transaction = new Transaction()
 			// Adjust defaults as bitcore library is not suited for our low tx fees
-			Transaction.DUST_AMOUNT = 572
-			Transaction.FEE_PER_KB = 1000
+			Transaction.DUST_AMOUNT = 5720
+			Transaction.FEE_PER_KB = 10000
 			Transaction.FEE_SECURITY_MARGIN = 100 //needed to allow InstantSend tx: 31;
 			transaction.fee(txFeeInDuffs)
 			for (var i = 0; i < rawUtxosHashes.length; i++) {
@@ -603,7 +693,7 @@ export class SendDash extends Component {
 		//all this get address/utxo stuff is not required on Trezor, we can simply use it
 		// Minimum fee we need to use for sending is 226 duff, for safety use twice that,
 		// otherwise trezor reports: Account funds are insufficient. Retrying...
-		if (txFee < 226 * send.DASH_PER_DUFF) txFee = 2 * txFee
+		if (txFee < 2260 * send.DASH_PER_DUFF) txFee = 2 * txFee
 		var sendAmount = this.state.amountToSend
 		// If we send everything, subtract txFee so we can actually send everything
 		if (this.state.amountToSend + txFee >= this.props.totalBalance)
@@ -767,7 +857,6 @@ export class SendDash extends Component {
 						href={
 							'https://' +
 							this.props.explorer +
-							(this.props.explorer === 'insight.dash.org' ? '/insight' : '') +
 							(this.props.explorer === 'blockchair.com/dash' ? '/transaction/' : '/tx/') +
 							this.state.sendTransaction
 						}

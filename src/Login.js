@@ -5,7 +5,7 @@ import AppBtc from '@ledgerhq/hw-app-btc'
 import TrezorConnect from 'trezor-connect'
 import SkyLight from 'react-skylight'
 import styled from 'styled-components'
-import { Mnemonic } from '@dashevo/dashcore-lib'
+import { Mnemonic } from 'alterdot-lib'
 
 const UnlockBlock = styled.div`
 	float: left;
@@ -187,7 +187,7 @@ export class Login extends Component {
 					</SkyLight>
 					<br />
 					<div style={{ fontSize: 'small', marginBottom: '10px' }}>
-						API supported by blockchair, insight.dash.org and our fallback explorer. Check
+						API supported by blockchair, insight.alterdot.network and our fallback explorer. Check
 						transactions and addresses fully private at
 					</div>
 					<a href="https://blockchair.com/dash" target="_blank" rel="noopener noreferrer">
