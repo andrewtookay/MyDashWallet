@@ -52,7 +52,7 @@ li {
 }
 a,
 .link {
-	color: #1c75bc;
+	color: #f1592a;
 	text-decoration: none;
 	cursor: pointer;
 	outline: none;
@@ -60,7 +60,7 @@ a,
 a:hover,
 .link:hover {
 	transition: all 0.15s ease-in-out;
-	color: #1c75bc;
+	color: #f1592a;
 	text-decoration: underline;
 }
 a:active,
@@ -108,11 +108,11 @@ input[type='tel'],
 input[type='color'] {
 	border: 1px solid #dddddd;
 	background: #fff;
-	padding: 0 13px;
+	padding: 0 12px;
 	box-shadow: none;
-	height: 49px;
+	height: 40px;
 	max-width: 100%;
-	border-radius: 0px;
+	border-radius: 8px;
 	width: 100%;
 }
 input[type='search'] {
@@ -138,7 +138,6 @@ input[type='url']:focus,
 input[type='search']:focus,
 input[type='tel']:focus,
 input[type='color']:focus {
-	border-color: #0eb1fe;
 	background: #f9f9f9;
 	box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
 }
@@ -148,7 +147,7 @@ input[type='button'],
 button {
 	background: #f1592a;
 	border: medium none;
-	border-radius: 0px;
+	border-radius: 8px;
 	color: #fff;
 	cursor: pointer;
 	display: inline-block;
@@ -215,7 +214,7 @@ button:active {
 #transactions tr.sent .colDate,
 #transactions tr.sent .colDash,
 #transactions tr.sent .colFiat {
-	color: #1c2e9e;
+	color: #621b57;
 }
 #transactions tr.received .colDate,
 #transactions tr.received .colDash,
@@ -224,6 +223,43 @@ button:active {
 }
 label {
 	margin-bottom: 0;
+}
+.Dropdown-control {
+	width: 86%;
+	border-radius: 6px;
+}
+.Dropdown-placeholder {
+	height: 14px;
+	font-size: 12px;
+}
+.Dropdown-menu {
+	font-size: 12px;
+}
+.main-left, .main-right {
+	width: 48%;
+}
+.main-left {
+	float: left;
+}
+.main-right {
+	float: right;
+}
+.notification-container {
+	width: 420px;
+}
+.full-line {
+	display: flex;
+	width: 100%;
+	flex-flow: row;
+}
+@media screen and (max-width: 1000px) {
+	.main-left, .main-right {
+		float: unset;
+		width: 100%;
+	}
+	.main-right {
+		padding-top: 20px;
+	}
 }
 @media screen and (max-width: 767px) {
 	h1 {
@@ -253,14 +289,4 @@ label {
 	button {
 		padding: 0px 18px;
 	}
-}
-.Dropdown-control {
-	width: 82%;
-}
-.Dropdown-placeholder {
-	height: 14px;
-	font-size: 12px;
-}
-.Dropdown-menu {
-	font-size: 12px;
 }

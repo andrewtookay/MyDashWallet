@@ -6,7 +6,7 @@ const Panel = styled.div`
 	padding: 15px;
 	border-radius: 15px;
 	box-shadow: 3px 3px 3px #dadbdb;
-	margin-bottom: 20px;
+	margin-top: 20px;
 	@media screen and (max-width: 768px) {
 		float: none;
 		width: 100%;
@@ -21,7 +21,7 @@ export class Transactions extends Component {
 				<div className="box-info all-transactions">
 					<div className="box-info-inner">
 						<div className="box-title">
-							<h3>All Transactions</h3>
+							<h3>Transaction History</h3>
 						</div>
 						{this.renderAllTransactions(
 							this.props.transactions.slice(0, 50).sort((a, b) => b.time - a.time),

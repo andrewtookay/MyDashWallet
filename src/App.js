@@ -1,11 +1,11 @@
 ﻿import React, { Component } from 'react'
 import { Menu } from './Menu'
-import { Mix } from './Mix'
-import { Tip } from './Tip'
-import { Chat } from './Chat'
-import { Stats } from './Stats'
+//import { Mix } from './Mix'
+//import { Tip } from './Tip'
+//import { Chat } from './Chat'
+//import { Stats } from './Stats'
 import { Help } from './Help'
-import { ScriptHack } from './ScriptHack'
+//import { ScriptHack } from './ScriptHack'
 import { LoggedIn } from './LoggedIn'
 import { Login } from './Login'
 import CryptoJS from 'crypto-js'
@@ -85,7 +85,7 @@ const Loader = styled.div`
 	border-top: 1.1em solid rgba(0, 141, 228, 0.2);
 	border-right: 1.1em solid rgba(0, 141, 228, 0.2);
 	border-bottom: 1.1em solid rgba(0, 141, 228, 0.2);
-	border-left: 1.1em solid #008de4;
+	border-left: 1.1em solid #f1592a;
 	-webkit-transform: translateZ(0);
 	-ms-transform: translateZ(0);
 	transform: translateZ(0);
@@ -183,7 +183,7 @@ export default class App extends Component {
 		ReactGA.pageview('/')
 	}
 	getModeFromUrl = () => {
-		return window.location.href.endsWith('mix')
+		/*window.location.href.endsWith('mix')
 			? 'mix'
 			: window.location.href.endsWith('tip') ||
 			  window.location.href.endsWith('tipping') ||
@@ -193,10 +193,11 @@ export default class App extends Component {
 			? 'chat'
 			: window.location.href.endsWith('stats') || window.location.href.endsWith('statistics')
 			? 'stats'
-			: window.location.href.endsWith('help') || window.location.href.includes('about')
+			: this first half is disabled*/
+		return window.location.href.endsWith('help') || window.location.href.includes('about')
 			? 'help'
-			: window.location.href.endsWith('scripthack')
-			? 'scripthack'
+			//: window.location.href.endsWith('scripthack')
+			//? 'scripthack'
 			: ''
 	}
 	setMode = newMode => {
@@ -422,7 +423,7 @@ export default class App extends Component {
 					collapsed={this.state.collapsed || window.innerWidth < 768}
 					isSmallScreen={window.innerWidth < 768}
 				>
-					{this.state.mode === 'mix' ? (
+					{/*this.state.mode === 'mix' ? (
 						<Mix
 							popupDialog={popupDialog}
 							addressBalances={addressBalances}
@@ -444,18 +445,18 @@ export default class App extends Component {
 						<Chat />
 					) : this.state.mode === 'stats' ? (
 						<Stats />
-					) : this.state.mode === 'help' ? (
+					) : this first half is disabled*/
+					this.state.mode === 'help' ? (
 						<Help />
-					) : this.state.mode === 'scripthack' ? (
-						<ScriptHack />
+					//) : this.state.mode === 'scripthack' ? (
+					//	<ScriptHack />
 					) : this.state.hdSeedE && this.state.encryptedPasswordHash ? (
 						<LoggedIn
 							explorer={this.state.explorer}
 							popupDialog={popupDialog}
 							addressBalances={addressBalances}
 							unlockedText={
-								(this.state.trezor ? 'Trezor' : this.state.ledger ? 'Ledger' : 'HD Wallet') +
-								' unlocked'
+								(this.state.trezor ? 'Trezor' : this.state.ledger ? 'Ledger' : 'Wallet')
 							}
 							rememberPassword={this.state.rememberPassword}
 							showNumber={this.showNumber}
@@ -488,6 +489,7 @@ export default class App extends Component {
 					)}
 					{this.state.loading && <Loader>DASH</Loader>}
 				</MainContainer>
+				{/*
 				<DashPricePanel>
 					<div title="Data from CoinMarketCap.com">
 						<b>1 DASH</b>
@@ -505,7 +507,7 @@ export default class App extends Component {
 							Tx:${this.showNumber(this.state.priceUsd * 0.00002260, 5)}
 						</div>
 					)}
-				</DashPricePanel>
+				</DashPricePanel>*/}
 			</PageContainer>
 		)
 	}

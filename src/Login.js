@@ -57,7 +57,7 @@ export class Login extends Component {
 		}
 	}
 	componentWillMount() {
-		document.body.style.backgroundImage = "url('/images/BackgroundWalletIllustration.png')"
+		//document.body.style.backgroundImage = "url('/images/BackgroundWalletIllustration.png')"
 	}
 	componentWillUnmount() {
 		document.body.style.backgroundImage = null

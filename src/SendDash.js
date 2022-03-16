@@ -12,9 +12,6 @@ import * as send from './send.js'
 var lastKnownNumberOfInputs = 1
 var txFee = 2260 * send.DASH_PER_DUFF
 const Panel = styled.div`
-	float: left;
-	width: 48%;
-	margin-right: 4%;
 	position: relative;
 	background: #fff;
 	padding: 15px;
@@ -875,7 +872,7 @@ export class SendDash extends Component {
 					<button onClick={() => this.successSendDialog.hide()}>Ok</button>
 				</SkyLight>
 				<Panel>
-					<h3>Send DASH</h3>
+					<h3>Send Alterdot</h3>
 					<div className="send_step_bg_otr section-send-step1">
 						<div className="send_step_form_otr step_1_otr">
 							<div className="input_box_otr clearfix">
@@ -927,94 +924,82 @@ export class SendDash extends Component {
 								</div>
 								<br />
 								<div className="input_box col_6 fl dash_currency">
-									<label>How much DASH do you want to send?</label>
-									<table style={{ width: '100%' }}>
-										<tbody>
-											<tr>
-												<td style={{ width: 'auto' }}>
-													<input
-														type="number"
-														value={this.state.amountToSend}
-														onChange={e => {
-															var newValue = parseFloat(e.target.value)
-															if (newValue < 0 || isNaN(newValue)) newValue = 0
-															this.setState({
-																amountToSend: newValue,
-																amountUsd: this.props.showNumber(
-																	newValue * this.props.getSelectedCurrencyDashPrice(),
-																	2
-																),
-															})
-														}}
-													/>
-												</td>
-												<td style={{ width: '35px' }}>
-													<button
-														onClick={() =>
-															this.setState({
-																amountToSend: this.props.totalBalance,
-																amountUsd: this.props.showNumber(
-																	this.props.totalBalance *
-																		this.props.getSelectedCurrencyDashPrice(),
-																	2
-																),
-															})
-														}
-													>
-														Max
-													</button>
-												</td>
-											</tr>
-										</tbody>
-									</table>
+									<label>How much ADOT do you want to send?</label>
+									<div className="full-line">
+										<input
+											style={{ marginRight: '8px' }}
+											type="number"
+											value={this.state.amountToSend}
+											onChange={e => {
+												var newValue = parseFloat(e.target.value)
+												if (newValue < 0 || isNaN(newValue)) newValue = 0
+												this.setState({
+													amountToSend: newValue,
+													amountUsd: this.props.showNumber(
+														newValue * this.props.getSelectedCurrencyDashPrice(),
+														2
+													),
+												})
+											}}
+										/>
+										<button
+											style={{ width: '80px' }}
+											onClick={() =>
+												this.setState({
+													amountToSend: this.props.totalBalance,
+													amountUsd: this.props.showNumber(
+														this.props.totalBalance *
+															this.props.getSelectedCurrencyDashPrice(),
+														2
+													),
+												})
+											}
+										>
+											Max
+										</button>
+									</div>
 								</div>
 								<br />
 								<div className="input_box col_6 fl usd_currency">
 									<label>Amount {this.props.selectedCurrency}:</label>
-									<table style={{ width: '100%' }}>
-										<tbody>
-											<tr>
-												<td style={{ width: 'auto' }}>
-													<input
-														type="number"
-														value={this.state.amountUsd}
-														onChange={e => {
-															var newValue = parseFloat(e.target.value)
-															if (newValue < 0 || isNaN(newValue)) newValue = 0
-															this.setState({
-																amountUsd: newValue,
-																amountToSend: this.props.showNumber(
-																	newValue / this.props.getSelectedCurrencyDashPrice(),
-																	5
-																),
-															})
-														}}
-													/>
-												</td>
-												<td style={{ width: '35px' }}>
-													<button
-														onClick={() =>
-															this.setState({
-																amountToSend: this.props.totalBalance,
-																amountUsd: this.props.showNumber(
-																	this.props.totalBalance *
-																		this.props.getSelectedCurrencyDashPrice(),
-																	2
-																),
-															})
-														}
-													>
-														Max
-													</button>
-												</td>
-											</tr>
-										</tbody>
-									</table>
+									<div className="full-line">
+										<input
+											style={{ marginRight: '8px' }}
+											type="number"
+											value={this.state.amountUsd}
+											onChange={e => {
+												var newValue = parseFloat(e.target.value)
+												if (newValue < 0 || isNaN(newValue)) newValue = 0
+												this.setState({
+													amountUsd: newValue,
+													amountToSend: this.props.showNumber(
+														newValue / this.props.getSelectedCurrencyDashPrice(),
+														5
+													),
+												})
+											}}
+										/>
+										<button
+											style={{ width: '80px' }}
+											onClick={() =>
+												this.setState({
+													amountToSend: this.props.totalBalance,
+													amountUsd: this.props.showNumber(
+														this.props.totalBalance *
+															this.props.getSelectedCurrencyDashPrice(),
+														2
+													),
+												})
+											}
+										>
+											Max
+										</button>
+									</div>
 								</div>
 								<br />
 								<div className="input_box col_12 form_btn fl section-next">
 									<button
-										style={{ float: 'right' }}
+										style={{ float: 'right', width: '24%' }}
 										onClick={() => {
 											if (!this.props.isValidDashAddress(this.state.destinationAddress)) {
 												this.setState({ error: 'Please enter a valid DASH Destination Address' })

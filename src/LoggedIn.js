@@ -41,7 +41,7 @@ export class LoggedIn extends Component {
 	componentDidMount() {
 		this.setAddressAndLookForLastUsedHdWalletAddress(this.props.addresses)
 		this.fillTransactions(this.props.addresses)
-		document.body.style.backgroundImage = "url('/images/BackgroundWalletIllustration.png')"
+		//document.body.style.backgroundImage = "url('/images/BackgroundWalletIllustration.png')"
 		if (
 			!this.props.ledger &&
 			!this.props.trezor &&
@@ -343,40 +343,38 @@ export class LoggedIn extends Component {
 			})
 	}
 	getUnusedAddress = () => {
-		var lastAddress = this.state.addresses[this.state.addresses.length - 1]
-		var amountOnLastAddress = this.props.addressBalances[lastAddress]
-		// We need a new fresh address
-		if (amountOnLastAddress > 0) {
-			var component = this
-			if (this.props.trezor) {
-				component.addLastAddress(this.props.trezor.unusedAddresses[1])
-			} else if (this.props.ledger) {
-				this.props.ledger
-					.getWalletPublicKey("44'/5'/0'/0/" + this.state.addresses.length)
-					.then(function(result) {
-						var addresses = component.addLastAddress(result.bitcoinAddress)
-						component.props.onUpdateBalanceAndAddressesStorage(
-							component.props.totalBalance,
-							addresses
-						)
-					})
-			} else if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
-				var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
-				if (hdS === '')
-					return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
-				var mnemonic = new Mnemonic(hdS)
-				var xpriv = mnemonic.toHDPrivateKey()
-				lastAddress = xpriv
-					.derive("m/44'/5'/0'/0/" + this.state.addresses.length)
-					.privateKey.toAddress()
-					.toString()
-				var addresses = this.addLastAddress(lastAddress)
-				this.props.onUpdateBalanceAndAddressesStorage(this.props.totalBalance, addresses)
-			} else {
-				this.showPasswordDialog.show()
-			}
+		var lastAddress = this.state.addresses[this.state.addresses.length - 1];
+		console.log("lastAddress0", lastAddress);
+		var component = this;
+		if (this.props.trezor) {
+			component.addLastAddress(this.props.trezor.unusedAddresses[1])
+		} else if (this.props.ledger) {
+			this.props.ledger
+				.getWalletPublicKey("44'/5'/0'/0/" + this.state.addresses.length)
+				.then(function(result) {
+					var addresses = component.addLastAddress(result.bitcoinAddress)
+					component.props.onUpdateBalanceAndAddressesStorage(
+						component.props.totalBalance,
+						addresses
+					)
+				})
+		} else if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
+			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
+			if (hdS === '')
+				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
+			var mnemonic = new Mnemonic(hdS)
+			var xpriv = mnemonic.toHDPrivateKey()
+			lastAddress = xpriv
+				.derive("m/44'/5'/0'/0/" + this.state.addresses.length)
+				.privateKey.toAddress()
+				.toString()
+			var addresses = this.addLastAddress(lastAddress)
+			this.props.onUpdateBalanceAndAddressesStorage(this.props.totalBalance, addresses)
+		} else {
+			this.showPasswordDialog.show()
 		}
-		return lastAddress
+		console.log("lastAddress1", lastAddress);
+		return lastAddress;
 	}
 	getSelectedCurrencyDashPrice = () => {
 		return this.state.selectedCurrency === 'EUR'
@@ -405,38 +403,58 @@ export class LoggedIn extends Component {
 		return (
 			<div id="main" className="main_dashboard_otr">
 				<h1>{this.props.unlockedText}</h1>
-				<Balances
-					totalBalance={this.props.totalBalance}
-					privateSendBalance={this.getPrivateSendBalance()}
-					showNumber={this.props.showNumber}
-					getSign={this.getSign}
-					setMode={this.props.setMode}
-					getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
-					selectedCurrency={this.state.selectedCurrency}
-					setSelectedCurrency={value => this.setState({ selectedCurrency: value })}
-				/>
-				<SendDash
-					explorer={this.props.explorer}
-					popupDialog={this.props.popupDialog}
-					addressBalances={this.props.addressBalances}
-					hdSeedE={this.props.hdSeedE}
-					getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
-					selectedCurrency={this.state.selectedCurrency}
-					isCorrectPasswordHash={this.props.isCorrectPasswordHash}
-					getUnusedAddress={this.getUnusedAddress}
-					totalBalance={this.props.totalBalance}
-					addresses={this.state.addresses}
-					showNumber={this.props.showNumber}
-					showDashNumber={this.showDashNumber}
-					onDecrypt={this.props.onDecrypt}
-					addTransaction={this.addTransaction}
-					setRememberedPassword={rememberPassword => this.setState({ password: rememberPassword })}
-					isValidDashAddress={this.isValidDashAddress}
-					onUpdateBalanceAndAddressesStorage={this.props.onUpdateBalanceAndAddressesStorage}
-					setNewTotalBalance={newBalance =>
-						this.props.onUpdateBalanceAndAddressesStorage(newBalance, this.state.addresses)
-					}
-				/>
+				<div className='main-left'>
+					<SendDash
+						explorer={this.props.explorer}
+						popupDialog={this.props.popupDialog}
+						addressBalances={this.props.addressBalances}
+						hdSeedE={this.props.hdSeedE}
+						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						selectedCurrency={this.state.selectedCurrency}
+						isCorrectPasswordHash={this.props.isCorrectPasswordHash}
+						getUnusedAddress={this.getUnusedAddress}
+						totalBalance={this.props.totalBalance}
+						addresses={this.state.addresses}
+						showNumber={this.props.showNumber}
+						showDashNumber={this.showDashNumber}
+						onDecrypt={this.props.onDecrypt}
+						addTransaction={this.addTransaction}
+						setRememberedPassword={rememberPassword => this.setState({ password: rememberPassword })}
+						isValidDashAddress={this.isValidDashAddress}
+						onUpdateBalanceAndAddressesStorage={this.props.onUpdateBalanceAndAddressesStorage}
+						setNewTotalBalance={newBalance =>
+							this.props.onUpdateBalanceAndAddressesStorage(newBalance, this.state.addresses)
+						}
+					/>
+					<Transactions
+						explorer={this.props.explorer}
+						transactions={this.state.transactions}
+						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						selectedCurrency={this.state.selectedCurrency}
+						showDashNumber={this.showDashNumber}
+						showNumber={this.props.showNumber}
+					/>
+				</div>
+				<div className='main-right'>
+					<Balances
+						totalBalance={this.props.totalBalance}
+						privateSendBalance={this.getPrivateSendBalance()}
+						showNumber={this.props.showNumber}
+						getSign={this.getSign}
+						setMode={this.props.setMode}
+						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						selectedCurrency={this.state.selectedCurrency}
+						setSelectedCurrency={value => this.setState({ selectedCurrency: value })}
+					/>
+					<ReceiveDash
+						explorer={this.props.explorer}
+						lastUnusedAddress={this.state.lastUnusedAddress}
+						getUnusedAddress={this.getUnusedAddress}
+						addressBalances={this.props.addressBalances}
+						reversedAddresses={this.state.addresses.slice().reverse()}
+						showDashNumber={this.showDashNumber}
+					/>
+				</div>
 				<SkyLight
 					dialogStyles={this.props.popupDialog}
 					hideOnOverlayClicked
@@ -494,24 +512,7 @@ export class LoggedIn extends Component {
 					<br />
 					<button onClick={() => this.hdWalletTooMuchBalanceWarning.hide()}>Ok</button>
 				</SkyLight>
-				<ReceiveDash
-					explorer={this.props.explorer}
-					lastUnusedAddress={this.state.lastUnusedAddress}
-					addressBalances={this.props.addressBalances}
-					reversedAddresses={this.state.addresses.slice().reverse()}
-					showDashNumber={this.showDashNumber}
-				/>
-				<div style={{ clear: 'both', paddingTop: '20px' }}>
-					<Transactions
-						explorer={this.props.explorer}
-						transactions={this.state.transactions}
-						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
-						selectedCurrency={this.state.selectedCurrency}
-						showDashNumber={this.showDashNumber}
-						showNumber={this.props.showNumber}
-					/>
-					<NotificationContainer />
-				</div>
+				<NotificationContainer />
 			</div>
 		)
 	}

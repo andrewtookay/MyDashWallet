@@ -11,11 +11,10 @@ import {
 
 const BalancesPanel = styled.div`
 	display: flex;
-	margin-top: 20px;
 	margin-bottom: 20px;
 `
 const BalanceBox = styled.div`
-	width: 32%;
+	width: 49%;
 	margin-right: 2%;
 	position: relative;
 	background: #fff;
@@ -41,7 +40,7 @@ const BalanceBoxValue = styled.div`
 	padding-top: 20px;
 	font-size: 37px;
 	line-height: 30px;
-	color: #008de4;
+	color: #f1592a;
 	display: block;
 	font-weight: 500;
 	white-space: nowrap;
@@ -72,11 +71,11 @@ export class Balances extends Component {
 		return (
 			<BalancesPanel>
 				<BalanceBox title="Your DASH Balance">
-					<BalanceBoxTitle>DASH Balance</BalanceBoxTitle>
+					<BalanceBoxTitle>ADOT Total Balance</BalanceBoxTitle>
 					<Icon icon={faMoneyBill} />
 					<BalanceBoxValue>{this.props.showNumber(this.props.totalBalance, 8)}</BalanceBoxValue>
 				</BalanceBox>
-				<BalanceBox title="PrivateSend Balance">
+				{/*<BalanceBox title="PrivateSend Balance">
 					{window.innerWidth > 768 //unused atm: && (
 					// <button style={{ float: 'right' }} onClick={() => this.props.setMode('mix')}>
 					// 	Mix
@@ -87,7 +86,7 @@ export class Balances extends Component {
 					<BalanceBoxValue style={{ color: '#8d00e4' }}>
 						{this.props.showNumber(this.props.privateSendBalance, 8)}
 					</BalanceBoxValue>
-				</BalanceBox>
+				</BalanceBox>*/}
 				<BalanceBox
 					style={{ marginRight: '0' }}
 					title={

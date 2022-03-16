@@ -2,13 +2,12 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 
 const Panel = styled.div`
-	float: right;
-	width: 48%;
 	position: relative;
 	background: #fff;
 	padding: 15px;
 	border-radius: 15px;
 	box-shadow: 3px 3px 3px #dadbdb;
+	overflow: hidden;
 	@media screen and (max-width: 768px) {
 		float: none;
 		width: 100%;
@@ -25,16 +24,16 @@ export class ReceiveDash extends Component {
 			this.props.lastUnusedAddress
 		return (
 			<Panel>
-				<h3>Your receive address</h3>
+				<h3>Latest address</h3>
 				<b>{this.props.lastUnusedAddress}</b>&nbsp;
 				<a
 					href={addressLink}
-					alt="Explorer"
-					title="Explorer"
+					alt="Insight"
+					title="Insight"
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					^
+					View
 				</a>
 				<br />
 				<img
@@ -48,9 +47,9 @@ export class ReceiveDash extends Component {
 				/>
 				{this.props.reversedAddresses.length > 1 && (
 					<div>
-						<h5>Your older addresses</h5>
+						<h5>Your other addresses</h5>
 						{this.props.reversedAddresses.slice(1).map(a => (
-							<div key={a} style={{ fontSize: '12px' }}>
+							<div key={a} style={{ fontSize: '15px' }}>
 								<a
 									href={
 										'https://' +
@@ -80,6 +79,15 @@ export class ReceiveDash extends Component {
 						))}
 					</div>
 				)}
+				<br />
+				<button
+					style={{ float: 'right' }}
+					onClick={() =>
+						this.props.getUnusedAddress()
+					}
+				>
+					New Address
+				</button>
 			</Panel>
 		)
 	}

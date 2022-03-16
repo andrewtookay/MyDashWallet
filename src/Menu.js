@@ -5,27 +5,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faBars,
 	faWallet,
-	faRandom,
-	faGift,
+	//faRandom,
+	//faGift,
 	//faComments,
 	//faChartBar,
 	faQuestion,
-	faSitemap,
+	//faSitemap,
 	faSignOutAlt,
 	//faBookDead,
 } from '@fortawesome/free-solid-svg-icons'
 import Dropdown from 'react-dropdown'
 import 'react-dropdown/style.css'
 
-const explorerOptions = ['blockchair.com/dash', 'insight.alterdot.network', 'explorer.mydashwallet.org']
+const explorerOptions = ['insight.alterdot.network']
 
 const Container = styled.div`
 	transition: all linear 0.2s;
-	width: ${props => (props.collapsed ? '44px' : '28%')};
+	width: ${props => (props.collapsed ? '44px' : '20%')};
 	height: 100vh;
 	min-height: ${props => (props.collapsed ? '800px' : '600px')};
-	background-color: #477bb6;
-	background-image: linear-gradient(#477bb6, #2a486b);
+	background-color: #621b57;
+	background-image: linear-gradient(#bf4646, #621b57);
 	position: relative;
 	float: none;
 	display: inline-block;
@@ -75,7 +75,7 @@ const Logo = styled.div`
 	width: 90%;
 	height: 80px;
 	min-height: 80px;
-	background: url(/images/Logo.png) no-repeat center center;
+	background: url(/images/alterdotLogoWithName.png) no-repeat center center;
 	background-size: 100%;
 	margin-top: 20px;
 	margin-bottom: 20px;
@@ -93,10 +93,11 @@ const Illustration = styled.div`
 	text-align: center;
 	max-width: 366px;
 	width: 90%;
-	height: 180px;
+	height: 210px;
 	min-height: 40px;
-	background: url(/images/Illustration.png) no-repeat center center;
+	background: url(/images/alterdotLogo.png) no-repeat center center;
 	background-size: 100%;
+	opacity: 30%;
 	margin-top: 0;
 	margin-bottom: 0;
 	margin-left: auto;
@@ -124,6 +125,7 @@ const MenuElements = styled.div`
 	margin-bottom: 40px;
 `
 const MenuFooter = styled.div`
+	display: ${props => (props.collapsed ? 'none' : 'block')};
 	position: absolute;
 	bottom: 0;
 	padding: 5px;
@@ -199,40 +201,41 @@ export class Menu extends Component {
 								<span>{!this.props.isUnlocked ? 'Open ' : ''}Wallet</span>
 							</Link>
 						</li>
+						{/*
 						<li>
 							<a href="https://old.mydashwallet.org/mixing">
 								<FontAwesomeIcon icon={faRandom} />
 								<span>Mix</span>
 							</a>
-							{/*unused, and not very helpful <Link to="/mix" onClick={() => this.props.setMode('mix')}>
+							unused, and not very helpful <Link to="/mix" onClick={() => this.props.setMode('mix')}>
 								<FontAwesomeIcon icon={faRandom} />
 								<span>Mix</span>
-							</Link> */}
+							</Link>
 						</li>
-						<li>
+						<li> TODO_ADOT_FUTURE implement tipping mechanism for light wallets
 							<Link to="/tip" onClick={() => this.props.setMode('tip')}>
 								<FontAwesomeIcon icon={faGift} />
 								<span>Tip</span>
 							</Link>
 						</li>
-						{/* TODO: implement on top of dash platform <li>
+						TODO: implement on top of dash platform <li>
 							<Link to="/chat" onClick={() => this.props.setMode('chat')}>
 								<FontAwesomeIcon icon={faComments} />
 								<span>Chat</span>
 							</Link>
-						</li> */}
+						</li>*/}
 						<li>
 							<Link to="/help" onClick={() => this.props.setMode('help')}>
 								<FontAwesomeIcon icon={faQuestion} />
 								<span>Help</span>
 							</Link>
 						</li>
-						<li>
+						{/*<li>
 							<a href="https://old.mydashwallet.org">
 								<FontAwesomeIcon icon={faSitemap} />
 								<span>Old Website</span>
 							</a>
-						</li>
+						</li>*/}
 						<li style={{ display: this.props.isUnlocked ? 'block' : 'none' }}>
 							<Link to="/" onClick={() => this.props.onLogout()}>
 								<FontAwesomeIcon icon={faSignOutAlt} />
@@ -242,8 +245,8 @@ export class Menu extends Component {
 					</ul>
 				</MenuElements>
 				<Illustration collapsed={collapsed} />
-				<MenuFooter>
-					<span style={{ fontSize: '12px' }}>Explorer to use</span>
+				<MenuFooter collapsed={collapsed}>
+					<span style={{ fontSize: '12px' }}>API: </span>
 					<Dropdown
 						options={explorerOptions}
 						onChange={this.props.onSelectExplorer}
@@ -308,23 +311,11 @@ export class Menu extends Component {
 						</a>
 					</center>
 					<FooterText collapsed={collapsed}>
-						&copy; 2017-2020 MyDashWallet by{' '}
-						<a href="https://deltaengine.net/" target="_blank" rel="noopener noreferrer">
-							DeltaEngine
-						</a>
+						&copy; 2022 Alterdot (ADOT) Developers
 					</FooterText>
 					<FooterText collapsed={collapsed}>
 						<a href="/help" target="_blank" rel="noopener noreferrer">
 							Terms of Use
-						</a>
-						{' - '}
-						Funded by{' '}
-						<a
-							href="https://www.dashcentral.org/p/MyDashWallet"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							DASH DAO
 						</a>
 					</FooterText>
 				</MenuFooter>
