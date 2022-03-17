@@ -17,10 +17,12 @@ const BalanceBox = styled.div`
 	width: 49%;
 	margin-right: 2%;
 	position: relative;
-	background: #fff;
+	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+	backdrop-filter: blur(4px);
+	z-index: 2;
 	padding: 15px;
 	border-radius: 15px;
-	box-shadow: 3px 3px 3px #dadbdb;
+	box-shadow: 3px 3px 3px #9f434e;
 `
 const BalanceBoxTitle = styled.div`
 	font-size: 18px;
@@ -70,7 +72,7 @@ export class Balances extends Component {
 	render = () => {
 		return (
 			<BalancesPanel>
-				<BalanceBox title="Your DASH Balance">
+				<BalanceBox title="Your ADOT Balance">
 					<BalanceBoxTitle>ADOT Total Balance</BalanceBoxTitle>
 					<Icon icon={faMoneyBill} />
 					<BalanceBoxValue>{this.props.showNumber(this.props.totalBalance, 8)}</BalanceBoxValue>
@@ -90,8 +92,8 @@ export class Balances extends Component {
 				<BalanceBox
 					style={{ marginRight: '0' }}
 					title={
-						'1 DASH = ' +
-						this.props.getSelectedCurrencyDashPrice() +
+						'1 ADOT = ' +
+						this.props.getSelectedCurrencyAlterdotPrice() +
 						' ' +
 						this.props.selectedCurrency
 					}
@@ -118,7 +120,7 @@ export class Balances extends Component {
 					/>
 					<BalanceBoxValue style={{ color: '#8de400' }}>
 						{this.props.showNumber(
-							this.props.totalBalance * this.props.getSelectedCurrencyDashPrice(),
+							this.props.totalBalance * this.props.getSelectedCurrencyAlterdotPrice(),
 							2
 						)}
 					</BalanceBoxValue>

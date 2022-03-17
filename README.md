@@ -2,9 +2,9 @@ New snappy rewritten wallet out 2019-07-31, check it out: https://MyDashWallet.o
 
 # MyDashWallet
 
-https://MyDashWallet.org provides an easy way for anyone to create DASH wallets locally in the browser or use existing hardware wallets and send DASH to anyone. For details about DASH see www.dash.org
+https://MyDashWallet.org provides an easy way for anyone to create ADOT wallets locally in the browser or use existing hardware wallets and send ADOT to anyone. For details about ADOT see www.dash.org
 
-This project is open-source, free to use and development was funded by the DASH DAO (Decentralized Autonomous Organization): https://www.dashcentral.org/p/MyDashWallet
+This project is open-source, free to use and development was funded by the ADOT DAO (Decentralized Autonomous Organization): https://www.dashcentral.org/p/MyDashWallet
 
 # Runs locally
 

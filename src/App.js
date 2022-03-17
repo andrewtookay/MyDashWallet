@@ -13,17 +13,21 @@ import { Mnemonic } from 'alterdot-lib'
 import ReactGA from 'react-ga'
 import styled from 'styled-components'
 import './all.css'
-import * as send from './send.js'
+import * as constants from './constants.js'
 var addressBalances = {}
 
 const PageContainer = styled.div`
+	background: linear-gradient(to top right, #ed5a2d, #c1616e);
+    border-radius: 40px;
+    height: 88vh;
+    width: 88vw;
 	@media screen and (max-width: 1200px) {
 		.register_mn_otr {
 			position: relative;
 		}
 	}
 `
-const DashPricePanel = styled.div`
+const AlterdotPricePanel = styled.div`
 	color: #3778b9;
 	-webkit-box-flex: 1;
 	-webkit-flex: 1 auto;
@@ -62,8 +66,8 @@ const MainContainer = styled.div`
 	display: inline-block;
 	vertical-align: middle;
 	margin-left: -3px;
-	width: ${props => (props.collapsed ? '86%' : props.isSmallScreen ? '97%' : '72%')};
-	height: 100vh;
+	width: ${props => (props.collapsed ? '86%' : props.isSmallScreen ? '97%' : '80%')};
+	height: 100%;
 	padding-top: 30px;
 	padding-left: 50px;
 	padding-right: 40px;
@@ -204,7 +208,7 @@ export default class App extends Component {
 		if (this.state.mode === newMode) return
 		this.setState({ mode: newMode })
 		if (!window.location.href.endsWith(newMode))
-			window.history.replaceState(null, 'MyDashWallet - ' + newMode, newMode)
+			window.history.replaceState(null, 'MyAlterdotWallet - ' + newMode, newMode)
 		ReactGA.pageview('/' + newMode)
 	}
 	loginWallet = password => {
@@ -285,7 +289,7 @@ export default class App extends Component {
 			hdSeedE: 'h',
 			encryptedPasswordHash: 'w',
 			addresses,
-			totalBalance: trezor ? trezor.balance * send.DASH_PER_DUFF : 0,
+			totalBalance: trezor ? trezor.balance * constants.ADOT_PER_DUFF : 0,
 			loading: false,
 			mode: '',
 			rememberPassword: '',
@@ -487,27 +491,27 @@ export default class App extends Component {
 							onLogout={this.logout}
 						/>
 					)}
-					{this.state.loading && <Loader>DASH</Loader>}
+					{this.state.loading && <Loader>ADOT</Loader>}
 				</MainContainer>
 				{/*
-				<DashPricePanel>
+				<AlterdotPricePanel>
 					<div title="Data from CoinMarketCap.com">
-						<b>1 DASH</b>
+						<b>1 ADOT</b>
 						<br />${this.showNumber(this.state.priceUsd, 2)}
 						<br />€{this.showNumber(this.state.priceEur, 2)}
 						<br />
 						{window.innerWidth > 768 && <span>{this.showNumber(this.state.priceBtc, 4)} BTC</span>}
 					</div>
 					{window.innerWidth > 768 && (
-						<div title="1 mDASH = 0.001 DASH. Data from CoinMarketCap.com">
-							<b>1 mDASH</b>
+						<div title="1 mADOT = 0.001 ADOT. Data from CoinMarketCap.com">
+							<b>1 mADOT</b>
 							<br />${this.showNumber(this.state.priceUsd / 1000.0, 2)}
 							<br />€{this.showNumber(this.state.priceEur / 1000.0, 2)}
 							<br />
 							Tx:${this.showNumber(this.state.priceUsd * 0.00002260, 5)}
 						</div>
 					)}
-				</DashPricePanel>*/}
+				</AlterdotPricePanel>*/}
 			</PageContainer>
 		)
 	}

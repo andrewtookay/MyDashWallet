@@ -91,7 +91,7 @@ export class Login extends Component {
 		return true
 	}
 	initializeLedger = () => {
-		this.setState({ ledgerMessage: 'Unlock your device and go to the Dash app!' })
+		this.setState({ ledgerMessage: 'Unlock your device and go to the Alterdot app!' })
 		this.ledgerDialog.show()
 		TransportU2F.create()
 			.then(async transport => {
@@ -103,7 +103,7 @@ export class Login extends Component {
 	initializeTrezor = () => {
 		this.setState({
 			trezorMessage:
-				"Please connect your Trezor Hardware Wallet and follow the instructions in the popup window (allow popup windows for this site). Check the 'Don't ask me again' checkbox, then your Export Dash Account when asked.",
+				"Please connect your Trezor Hardware Wallet and follow the instructions in the popup window (allow popup windows for this site). Check the 'Don't ask me again' checkbox, then your Export Alterdot Account when asked.",
 		})
 		this.trezorDialog.show()
 		TrezorConnect.cancel()
@@ -406,7 +406,7 @@ export class Login extends Component {
 					<ul>
 						<li>
 							<Link to="/help" onClick={() => this.props.setMode('help')}>
-								What is MyDashWallet.org?
+								What is MyAlterdotWallet.org?
 							</Link>
 						</li>
 						<li>
@@ -444,9 +444,9 @@ export class Login extends Component {
 						<li>
 							<a
 								data-i18n="AboutImportantQuestions5"
-								href="https://old.mydashwallet.org/AboutMyDashWallet"
+								href="https://old.mydashwallet.org/AboutMyAlterdotWallet"
 							>
-								Why is MyDashWallet so fast? How does it work?
+								Why is MyAlterdotWallet so fast? How does it work?
 							</a>
 						</li>
 						<li>
@@ -454,7 +454,7 @@ export class Login extends Component {
 								data-i18n="AboutImportantQuestions6"
 								href="https://old.mydashwallet.org/AboutTransactionFees"
 							>
-								Why are DASH transactions so cheap on MyDashWallet?
+								Why are ADOT transactions so cheap on MyAlterdotWallet?
 							</a>
 						</li>
 						<li>
@@ -462,7 +462,7 @@ export class Login extends Component {
 								data-i18n="AboutImportantQuestions7"
 								href="https://old.mydashwallet.org/AboutInstantSend"
 							>
-								How to does DASH InstantSend work on MyDashWallet?
+								How to does ADOT InstantSend work on MyAlterdotWallet?
 							</a>
 						</li>
 						<li>
@@ -470,7 +470,7 @@ export class Login extends Component {
 								data-i18n="AboutImportantQuestions8"
 								href="https://old.mydashwallet.org/AboutPrivateSend"
 							>
-								How to does DASH PrivateSend work on MyDashWallet?
+								How to does ADOT PrivateSend work on MyAlterdotWallet?
 							</a>
 						</li>
 					</ul>

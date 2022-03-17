@@ -2,10 +2,13 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 
 const Panel = styled.div`
-	background: #fff;
+	position: relative;
+	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+	backdrop-filter: blur(4px);
+	z-index: 2;
 	padding: 15px;
 	border-radius: 15px;
-	box-shadow: 3px 3px 3px #dadbdb;
+	box-shadow: 3px 3px 3px #9f434e;
 	margin-top: 20px;
 	@media screen and (max-width: 768px) {
 		float: none;
@@ -42,7 +45,7 @@ export class Transactions extends Component {
 						<tr>
 							<th className="colTx">Transaction</th>
 							<th className="colDate">Date</th>
-							<th className="colDash">DASH</th>
+							<th className="colAlterdot">ADOT</th>
 							<th className="colFiat">{this.props.selectedCurrency}</th>
 							<th className="colConfirmations">Confirmations</th>
 						</tr>
@@ -68,7 +71,7 @@ export class Transactions extends Component {
 												target="_blank"
 												rel="noopener noreferrer"
 											>
-												{tx.id.substring(0, 8)}...{tx.id.substring(tx.id.length - 8)}
+												{tx.id.substring(0, 6)}...{tx.id.substring(tx.id.length - 4)}
 											</a>
 										</div>
 									</td>
@@ -78,13 +81,13 @@ export class Transactions extends Component {
 											{tx.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 										</span>
 									</td>
-									<td className="colDash" title={this.props.showDashNumber(tx.amountChange)}>
+									<td className="colAlterdot" title={this.props.showAlterdotNumber(tx.amountChange)}>
 										{(tx.amountChange > 0 ? '+' : '') +
 											this.props.showNumber(tx.amountChange, fullSize ? 8 : 5)}
 									</td>
 									<td className="colFiat">
 										{(tx.amountChange > 0 ? '+' : '') +
-											(tx.amountChange * this.props.getSelectedCurrencyDashPrice()).toFixed(2)}
+											(tx.amountChange * this.props.getSelectedCurrencyAlterdotPrice()).toFixed(2)}
 									</td>
 									<td className="colConfirmations">
 										{tx.confirmations +

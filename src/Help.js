@@ -41,11 +41,11 @@ export class Help extends Component {
 						</div>
 						<div className="col col-sm-4 offset-sm-1">
 							<img
-								src="https://media.dash.org/wp-content/uploads/dash_digital-cash_logo_2018_rgb_for_screens_s.png"
+								src="https://media.dash.org/wp-content/uploads/alterdotLogoWithName.png"
 								style={{
 									width: '400px',
 								}}
-								alt="Dash"
+								alt="Alterdot"
 							/>
 						</div>
 					</section>
@@ -100,7 +100,7 @@ export class Help extends Component {
 										data-i18n="AboutImportantQuestions6"
 										href="https://old.mydashwallet.org/AboutTransactionFees"
 									>
-										Why are DASH transactions so cheap on MyDashWallet?
+										Why are ADOT transactions so cheap on MyDashWallet?
 									</a>
 								</li>
 								<li>
@@ -108,7 +108,7 @@ export class Help extends Component {
 										data-i18n="AboutImportantQuestions7"
 										href="https://old.mydashwallet.org/AboutInstantSend"
 									>
-										How to does DASH InstantSend work on MyDashWallet?
+										How to does ADOT InstantSend work on MyDashWallet?
 									</a>
 								</li>
 								<li>
@@ -116,7 +116,7 @@ export class Help extends Component {
 										data-i18n="AboutImportantQuestions8"
 										href="https://old.mydashwallet.org/AboutPrivateSend"
 									>
-										How to does DASH PrivateSend work on MyDashWallet?
+										How to does ADOT PrivateSend work on MyDashWallet?
 									</a>
 								</li>
 							</ul>
@@ -185,7 +185,7 @@ export class Help extends Component {
 									hardware wallet.
 								</li>
 								<li data-i18n="AboutInterface6">
-									If you send your public key (address) to someone, they can send you DASH.
+									If you send your public key (address) to someone, they can send you ADOT.
 									<span role="img" aria-label="thumbs-up">
 										👍
 									</span>

@@ -21,12 +21,14 @@ const explorerOptions = ['insight.alterdot.network']
 
 const Container = styled.div`
 	transition: all linear 0.2s;
-	width: ${props => (props.collapsed ? '44px' : '20%')};
-	height: 100vh;
+	width: ${props => (props.collapsed ? '44px' : '18%')};
+	height: 100%;
+	border-radius: 40px;
 	min-height: ${props => (props.collapsed ? '800px' : '600px')};
 	background-color: #621b57;
-	background-image: linear-gradient(#bf4646, #621b57);
+	background-image: linear-gradient(#621b57,#621b32);
 	position: relative;
+	z-index: 2;
 	float: none;
 	display: inline-block;
 	vertical-align: top;
@@ -246,13 +248,15 @@ export class Menu extends Component {
 				</MenuElements>
 				<Illustration collapsed={collapsed} />
 				<MenuFooter collapsed={collapsed}>
-					<span style={{ fontSize: '12px' }}>API: </span>
-					<Dropdown
-						options={explorerOptions}
-						onChange={this.props.onSelectExplorer}
-						value={explorerOptions[0]}
-						placeholder="Blockchain Explorer"
-					/>
+					<div className='full-line'>
+						<span style={{ fontSize: '12px' }}>API: </span>
+						<Dropdown
+							options={explorerOptions}
+							onChange={this.props.onSelectExplorer}
+							value={explorerOptions[0]}
+							placeholder="Blockchain Explorer"
+						/>
+					</div>
 					<br />
 					<center>
 						<a

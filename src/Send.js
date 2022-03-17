@@ -7,16 +7,18 @@ import TrezorConnect from 'trezor-connect'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQrcode } from '@fortawesome/free-solid-svg-icons'
 import SkyLight from 'react-skylight'
-import * as send from './send.js'
+import * as constants from './constants.js'
 
 var lastKnownNumberOfInputs = 1
-var txFee = 2260 * send.DASH_PER_DUFF
+var txFee = 2260 * constants.ADOT_PER_DUFF
 const Panel = styled.div`
 	position: relative;
-	background: #fff;
+	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+	backdrop-filter: blur(4px);
+	z-index: 2;
 	padding: 15px;
 	border-radius: 15px;
-	box-shadow: 3px 3px 3px #dadbdb;
+	box-shadow: 3px 3px 3px #9f434e;
 	@media screen and (max-width: 768px) {
 		float: none;
 		width: 100%;
@@ -26,7 +28,7 @@ const Panel = styled.div`
 	}
 `
 
-export class SendDash extends Component {
+export class Send extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
@@ -45,14 +47,14 @@ export class SendDash extends Component {
 			error: '',
 		})
 	}
-	sendDash = () => {
+	sendAlterdot = () => {
 		if (
-			this.state.amountToSend < send.DUST_AMOUNT_IN_DASH ||
+			this.state.amountToSend < constants.DUST_AMOUNT_IN_ADOT ||
 			this.state.amountToSend > this.props.totalBalance ||
-			!this.props.isValidDashAddress(this.state.destinationAddress)
+			!this.props.isValidAlterdotAddress(this.state.destinationAddress)
 		) {
 			NotificationManager.error(
-				!this.props.isValidDashAddress(this.state.destinationAddress)
+				!this.props.isValidAlterdotAddress(this.state.destinationAddress)
 					? 'Invalid address'
 					: 'Invalid amount'
 			)
@@ -62,7 +64,7 @@ export class SendDash extends Component {
 			})
 		} else if (!this.props.isCorrectPasswordHash(this.state.password)) {
 			this.setState({
-				error: 'Please enter your correct password to unlock your wallet for sending DASH.',
+				error: 'Please enter your correct password to unlock your wallet for sending ADOT.',
 			})
 		} else {
 			this.props.setRememberedPassword(this.state.password)
@@ -85,7 +87,7 @@ export class SendDash extends Component {
 		var addressIndex = 0
 		for (var key of Object.keys(this.props.addressBalances)) {
 			var amount = this.props.addressBalances[key]
-			if (!isNaN(amount) && amount > send.DUST_AMOUNT_IN_DASH)
+			if (!isNaN(amount) && amount > constants.DUST_AMOUNT_IN_ADOT)
 				addresses.push({ addressIndex: addressIndex, address: key })
 			addressIndex++
 		}
@@ -119,7 +121,7 @@ export class SendDash extends Component {
 		var numberOfAddressesToUse = 0
 		for (var key of Object.keys(this.props.addressBalances)) {
 			var amount = this.props.addressBalances[key]
-			if (!isNaN(amount) && amount > send.DUST_AMOUNT_IN_DASH) {
+			if (!isNaN(amount) && amount > constants.DUST_AMOUNT_IN_ADOT) {
 				numberOfAddressesToUse++
 				amountToSend -= amount
 				if (amountToSend <= 0) return numberOfAddressesToUse
@@ -145,7 +147,7 @@ export class SendDash extends Component {
 		// mADOT tx fee with 10 dots/byte with default 226 byte tx for 1 input, 374 for 2 inputs (78+148*
 		// inputs). All this is recalculated below and on the server side once number of inputs is known. TODO_ADOT_HIGH update comments
 		txFee = (0.0078 + 0.0148 * numberOfInputs) / 1000
-		if (!txFee) txFee = 1920 * send.DASH_PER_DUFF
+		if (!txFee) txFee = 1920 * constants.ADOT_PER_DUFF
 		/*
 		// PrivateSend number of needed inputs depends on the amount, not on the inputs (fee for that
 		// is already calculated above). Details on the /AboutPrivateSend help page
@@ -153,8 +155,8 @@ export class SendDash extends Component {
 			txFee += 1 + getPrivateSendNumberOfInputsBasedOnAmount();
 		*/
 		if (
-			this.state.amountToSend < send.DUST_AMOUNT_IN_DASH ||
-			this.state.amountToSend > parseFloat(this.props.totalBalance) + send.DUST_AMOUNT_IN_DASH
+			this.state.amountToSend < constants.DUST_AMOUNT_IN_ADOT ||
+			this.state.amountToSend > parseFloat(this.props.totalBalance) + constants.DUST_AMOUNT_IN_ADOT
 		) {
 			//$("#generateButton").css("backgroundColor", "gray").attr("disabled", "disabled");
 			if (this.state.amountToSend > 0) this.setState({ amountToSend: 0 })
@@ -222,8 +224,8 @@ export class SendDash extends Component {
 				var totalAmountNeeded = component.getTotalAmountNeededByRecalculatingTxFee(txToUse)
 				console.log("utxos:", utxos);
 				for (var i = 0; i < utxos.length; i++) {
-					var amount = isBlockchair ? utxos[i]['value'] * send.DASH_PER_DUFF : utxos[i]['amount']
-					if (amount >= send.DUST_AMOUNT_INPUTS_IN_DASH) {
+					var amount = isBlockchair ? utxos[i]['value'] * constants.ADOT_PER_DUFF : utxos[i]['amount']
+					if (amount >= constants.DUST_AMOUNT_INPUTS_IN_ADOT) {
 						txToUse.push(utxos[i][isBlockchair ? 'transaction_hash' : 'txid'])
 						txOutputIndexToUse.push(utxos[i][isBlockchair ? 'index' : 'vout'])
 						txAddressPathIndices.push(
@@ -250,7 +252,7 @@ export class SendDash extends Component {
 					'/address/' +
 					address +
 					' (-' +
-					component.props.showDashNumber(thisAddressAmountToUse) +
+					component.props.showAlterdotNumber(thisAddressAmountToUse) +
 					')'
 				// Add extra offset in case we are very close to the txFee with total amount!
 				if (txAmountTotal >= totalAmountNeeded - txFee * 2) { // TODO_ADOT_COMMENT with our wallet calculations will happen locally so we need exact numbers
@@ -271,7 +273,7 @@ export class SendDash extends Component {
 					// Update amountToSend in case we had to reduce it a bit to allow for the txFee
 					var amountToSend = component.props.showNumber(totalAmountNeeded - txFee, 8) // totalAmountNeeded is amountToSend + txFee so this seems useless?
 					if (component.state.amountToSend !== amountToSend) component.setState({ amountToSend })
-					//var remainingDash = txAmountTotal - totalAmountNeeded
+					//var remainingAlterdot = txAmountTotal - totalAmountNeeded
 					var tx = new Transaction();
 					console.log("txToUse: " + txToUse + " txOutputIndexToUse: " + txOutputIndexToUse + " sendTo: " + sendTo + " amountToSend: " + component.props.showNumber(amountToSend, 8) +
 					" remainingAddress: " + remainingAddress);
@@ -291,7 +293,7 @@ export class SendDash extends Component {
 
 					// TODO_ADOT_HIGH end of first method, display tx fee info
 
-					tx.sign(this.getDashHDWalletPrivateKeys());
+					tx.sign(this.getAlterdotHDWalletPrivateKeys());
 					this.sendSignedRawTx(tx.serialize()); // TODO_ADOT_HIGH error checks
 					/*fetch('https://old.mydashwallet.org/generateTx', {
 						mode: 'cors',
@@ -301,7 +303,7 @@ export class SendDash extends Component {
 							utxos: utxosTextWithOutputIndices,
 							amount: component.props.showNumber(amountToSend, 8),
 							sendTo: sendTo.replace('#', '|'),
-							remainingAmount: component.props.showNumber(remainingDash, 8),
+							remainingAmount: component.props.showNumber(remainingAlterdot, 8),
 							remainingAddress: remainingAddress,
 						}),
 						headers: { 'Content-Type': 'application/json' },
@@ -316,14 +318,14 @@ export class SendDash extends Component {
 							//console.log("txFee: %O", txFee);
 							console.log(
 								'Using these inputs from your addresses to send <b>' +
-									component.props.showDashNumber(totalAmountNeeded) +
+									component.props.showAlterdotNumber(totalAmountNeeded) +
 									'</b> (with fees): ' +
 									inputListText
 							)
-							if (remainingDash > 0)
+							if (remainingAlterdot > 0)
 								console.log(
 									'The remaining ' +
-										component.props.showDashNumber(remainingDash) +
+										component.props.showAlterdotNumber(remainingAlterdot) +
 										' will be send to your own receiving address: https://' +
 										this.props.explorer +
 										'/address/' +
@@ -373,9 +375,9 @@ export class SendDash extends Component {
 						error:
 							'Insufficient funds, cannot send ' +
 							totalAmountNeeded +
-							' Dash (including tx fee), you only have ' +
+							' Alterdot (including tx fee), you only have ' +
 							component.props.totalBalance +
-							' Dash. Unable to create transaction (please refresh this site if you have enough Dash)! Your inputs so far:<br><ul>' +
+							' Alterdot. Unable to create transaction (please refresh this site if you have enough Alterdot)! Your inputs so far:<br><ul>' +
 							inputListText +
 							'</ul>',
 					})
@@ -395,7 +397,7 @@ export class SendDash extends Component {
 			txOutputIndexToUse,
 			rawTx,
 			txFeeInDuffs,
-			this.getDashHDWalletPrivateKeys()
+			this.getAlterdotHDWalletPrivateKeys()
 		)
 		//console.log("signed tx %O", signedTx);
 		if (signedTx.startsWith('Error')) {
@@ -440,7 +442,7 @@ export class SendDash extends Component {
 		}
 		this.setState({
 			error:
-				'Sign the transaction output#1, output#2 and Transaction with shown fee (compare with the values above, they should match) with your hardware device to send it to the Dash network!',
+				'Sign the transaction output#1, output#2 and Transaction with shown fee (compare with the values above, they should match) with your hardware device to send it to the Alterdot network!',
 		})
 		// Sign on hardware (specifying the change address gets rid of change output confirmation)
 		var remainingAddressPath = undefined
@@ -459,13 +461,13 @@ export class SendDash extends Component {
 		//https://github.com/kvhnuke/etherwallet/issues/336
 		if (error === 'Invalid status 6faa')
 			return (
-				'The device is currently locked or not in the Dash app, please unlock and try again! ' +
+				'The device is currently locked or not in the Alterdot app, please unlock and try again! ' +
 				error +
 				'.'
 			)
 		else if (error === 'Invalid status 6f04')
 			return (
-				'The device is currently locked or not in the Dash app, probably auto-locked. Please unlock and try again (some users reported disabling auto-lock helped or they restarted). ' +
+				'The device is currently locked or not in the Alterdot app, probably auto-locked. Please unlock and try again (some users reported disabling auto-lock helped or they restarted). ' +
 				error +
 				'.'
 			)
@@ -512,14 +514,14 @@ export class SendDash extends Component {
 		//'CONFIGURATION_UNSUPPORTED': 3,
 		else if (error.errorCode === 3)
 			errorText +=
-				' Configuration unsupported. Make sure your device is fully setup and operational and in the Dash app.'
+				' Configuration unsupported. Make sure your device is fully setup and operational and in the Alterdot app.'
 		//'DEVICE_INELIGIBLE': 4,
 		else if (error.errorCode === 4)
-			errorText = ' Dash app is not open on Ledger. Please open the Dash app to continue.'
+			errorText = ' Alterdot app is not open on Ledger. Please open the Alterdot app to continue.'
 		//'TIMEOUT': 5
 		else if (error.errorCode === 5)
 			errorText +=
-				"<br />Please turn on auto approval in the Dash app Settings on the Ledger (some devices/firmwares are buggy and time out when manually approving each time).<br />Error code 5 can also mean that your Ledger is opened and being used by another application, such as Ledger Live.<br />Unable to retrieve key or unable to connect to Ledger Hardware (20s timeout?). Some browsers also disallow this on localhost or need multiple tries.<br /><a href='https://www.reddit.com/r/ledgerwallet/comments/b14jed/still_getting_u2f_timeout/'>More information about this issue can be found here</a>. Hopefully the next version of the Ledger firmware and apps fixes this, try again, reconnect and ask Ledger support for help!"
+				"<br />Please turn on auto approval in the Alterdot app Settings on the Ledger (some devices/firmwares are buggy and time out when manually approving each time).<br />Error code 5 can also mean that your Ledger is opened and being used by another application, such as Ledger Live.<br />Unable to retrieve key or unable to connect to Ledger Hardware (20s timeout?). Some browsers also disallow this on localhost or need multiple tries.<br /><a href='https://www.reddit.com/r/ledgerwallet/comments/b14jed/still_getting_u2f_timeout/'>More information about this issue can be found here</a>. Hopefully the next version of the Ledger firmware and apps fixes this, try again, reconnect and ask Ledger support for help!"
 		else if (error.errorCode === 400)
 			errorText +=
 				' Please update your hardware device, seems like an error occurred while updating. https://ledger.zendesk.com/hc/en-us/articles/115005171225-Error-Code-400'
@@ -550,7 +552,7 @@ export class SendDash extends Component {
 				});
 				NotificationManager.success(
 					'Sent ' +
-						component.props.showDashNumber(sentAmount) +
+						component.props.showAlterdotNumber(sentAmount) +
 						' to ' +
 						component.state.destinationAddress,
 					'Success'
@@ -558,8 +560,8 @@ export class SendDash extends Component {
 				var amountChange = component.props.addresses.includes(component.state.destinationAddress) ? - txFee : - (sentAmount + txFee);
 				var newBalance = parseFloat(component.props.totalBalance) + amountChange;
 
-				if (newBalance < send.DUST_AMOUNT_IN_DASH) newBalance = 0;
-				//NotificationManager.info('New balance: ' + component.props.showDashNumber(newBalance));
+				if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0;
+				//NotificationManager.info('New balance: ' + component.props.showAlterdotNumber(newBalance));
 				component.props.setNewTotalBalance(newBalance);
 				component.successSendDialog.show();
 				console.log(component.props.addresses, component.state.destinationAddress);
@@ -592,14 +594,14 @@ export class SendDash extends Component {
 			.then(finalTx => {
 				NotificationManager.success(
 					'Sent ' +
-						component.props.showDashNumber(component.state.amountToSend) +
+						component.props.showAlterdotNumber(component.state.amountToSend) +
 						' to ' +
 						component.state.destinationAddress,
 					'Success'
 				)
 				var newBalance = component.props.totalBalance - (component.state.amountToSend + txFee)
-				if (newBalance < send.DUST_AMOUNT_IN_DASH) newBalance = 0
-				NotificationManager.info('New balance: ' + component.props.showDashNumber(newBalance))
+				if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0
+				NotificationManager.info('New balance: ' + component.props.showAlterdotNumber(newBalance))
 				component.setState({
 					error: '',
 					password: '',
@@ -624,7 +626,7 @@ export class SendDash extends Component {
 				component.setState({ error: 'Server Error: ' + (serverError.message || serverError) })
 			})
 	}
-	getDashHDWalletPrivateKeys = () => {
+	getAlterdotHDWalletPrivateKeys = () => {
 		var keys = []
 		var index = 0
 		var mnemonic = new Mnemonic(this.props.onDecrypt(this.props.hdSeedE, this.state.password))
@@ -690,7 +692,7 @@ export class SendDash extends Component {
 		//all this get address/utxo stuff is not required on Trezor, we can simply use it
 		// Minimum fee we need to use for sending is 226 duff, for safety use twice that,
 		// otherwise trezor reports: Account funds are insufficient. Retrying...
-		if (txFee < 2260 * send.DASH_PER_DUFF) txFee = 2 * txFee
+		if (txFee < 2260 * constants.ADOT_PER_DUFF) txFee = 2 * txFee
 		var sendAmount = this.state.amountToSend
 		// If we send everything, subtract txFee so we can actually send everything
 		if (this.state.amountToSend + txFee >= this.props.totalBalance)
@@ -701,7 +703,7 @@ export class SendDash extends Component {
 			outputs: [
 				{
 					address: this.state.destinationAddress,
-					amount: '' + Math.round(sendAmount / send.DASH_PER_DUFF), //in duff
+					amount: '' + Math.round(sendAmount / constants.ADOT_PER_DUFF), //in duff
 				},
 			],
 			coin: 'dash',
@@ -711,14 +713,14 @@ export class SendDash extends Component {
 				//not needed, we pushed already via trezor: component.sendSignedTx(result.payload.serializedTx)
 				NotificationManager.success(
 					'Sent ' +
-						component.props.showDashNumber(sendAmount) +
+						component.props.showAlterdotNumber(sendAmount) +
 						' to ' +
 						component.state.destinationAddress,
 					'Success'
 				)
 				var newBalance = component.props.totalBalance - (sendAmount + txFee)
-				if (newBalance < send.DUST_AMOUNT_IN_DASH) newBalance = 0
-				NotificationManager.info('New balance: ' + component.props.showDashNumber(newBalance))
+				if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0
+				NotificationManager.info('New balance: ' + component.props.showAlterdotNumber(newBalance))
 				component.setState({
 					error: '',
 					password: '',
@@ -743,7 +745,7 @@ export class SendDash extends Component {
 						'Error signing with TREZOR: ' +
 						result.payload.error +
 						(result.error === 'Amount is to low'
-							? ' (Sorry, TREZOR currently only allows transactions above 226 duffs, use more than 0.0000226 DASH)'
+							? ' (Sorry, TREZOR currently only allows transactions above 226 duffs, use more than 0.0000226 ADOT)'
 							: ''),
 				})
 			}
@@ -774,21 +776,21 @@ export class SendDash extends Component {
 					Address to send to: <b>{this.state.destinationAddress}</b>
 					<br />
 					<br />
-					Amount in DASH: <b>{this.props.showDashNumber(this.state.amountToSend)}</b>
+					Amount in ADOT: <b>{this.props.showAlterdotNumber(this.state.amountToSend)}</b>
 					<br />
 					Amount in {this.props.selectedCurrency}:{' '}
 					<b>
 						{this.props.showNumber(
-							this.state.amountToSend * this.props.getSelectedCurrencyDashPrice(),
+							this.state.amountToSend * this.props.getSelectedCurrencyAlterdotPrice(),
 							2
 						)}
 					</b>
 					<br />
 					<br />
-					Fee in DASH: {this.props.showDashNumber(txFee)}
+					Fee in ADOT: {this.props.showAlterdotNumber(txFee)}
 					<br />
 					Fee in {this.props.selectedCurrency}:{' '}
-					{this.props.showNumber(txFee * this.props.getSelectedCurrencyDashPrice(), 4)}
+					{this.props.showNumber(txFee * this.props.getSelectedCurrencyAlterdotPrice(), 4)}
 					<br />
 					<br />
 					{this.props.trezor || this.props.ledger ? (
@@ -830,7 +832,7 @@ export class SendDash extends Component {
 						<button
 							style={{ float: 'right' }}
 							className="a_btn confirm-btn btn-base btn-orange"
-							onClick={() => this.sendDash()}
+							onClick={() => this.sendAlterdot()}
 						>
 							Confirm
 						</button>
@@ -864,7 +866,7 @@ export class SendDash extends Component {
 					</a>
 					<br />
 					<br />
-					<p>Your new balance is {this.props.showDashNumber(this.props.totalBalance)}</p>
+					<p>Your new balance is {this.props.showAlterdotNumber(this.props.totalBalance)}</p>
 					<br />
 					<div className="error" dangerouslySetInnerHTML={{ __html: this.state.error }} />
 					<br />
@@ -884,7 +886,7 @@ export class SendDash extends Component {
 												<td style={{ width: 'auto' }}>
 													<input
 														type="text"
-														placeholder="Dash Address"
+														placeholder="Alterdot Address"
 														value={this.state.destinationAddress}
 														onChange={e => this.setState({ destinationAddress: e.target.value })}
 													/>
@@ -902,7 +904,7 @@ export class SendDash extends Component {
 																this.setState({
 																	enableQrScanner: true,
 																	addressPreviewResult:
-																		'QR Code Scanner ready, please scan a DASH address!',
+																		'QR Code Scanner ready, please scan a ADOT address!',
 																})
 														}}
 													/>
@@ -936,7 +938,7 @@ export class SendDash extends Component {
 												this.setState({
 													amountToSend: newValue,
 													amountUsd: this.props.showNumber(
-														newValue * this.props.getSelectedCurrencyDashPrice(),
+														newValue * this.props.getSelectedCurrencyAlterdotPrice(),
 														2
 													),
 												})
@@ -949,7 +951,7 @@ export class SendDash extends Component {
 													amountToSend: this.props.totalBalance,
 													amountUsd: this.props.showNumber(
 														this.props.totalBalance *
-															this.props.getSelectedCurrencyDashPrice(),
+															this.props.getSelectedCurrencyAlterdotPrice(),
 														2
 													),
 												})
@@ -973,7 +975,7 @@ export class SendDash extends Component {
 												this.setState({
 													amountUsd: newValue,
 													amountToSend: this.props.showNumber(
-														newValue / this.props.getSelectedCurrencyDashPrice(),
+														newValue / this.props.getSelectedCurrencyAlterdotPrice(),
 														5
 													),
 												})
@@ -986,7 +988,7 @@ export class SendDash extends Component {
 													amountToSend: this.props.totalBalance,
 													amountUsd: this.props.showNumber(
 														this.props.totalBalance *
-															this.props.getSelectedCurrencyDashPrice(),
+															this.props.getSelectedCurrencyAlterdotPrice(),
 														2
 													),
 												})
@@ -1001,24 +1003,24 @@ export class SendDash extends Component {
 									<button
 										style={{ float: 'right', width: '24%' }}
 										onClick={() => {
-											if (!this.props.isValidDashAddress(this.state.destinationAddress)) {
-												this.setState({ error: 'Please enter a valid DASH Destination Address' })
-											} else if (this.state.amountToSend < send.DUST_AMOUNT_IN_DASH) {
+											if (!this.props.isValidAlterdotAddress(this.state.destinationAddress)) {
+												this.setState({ error: 'Please enter a valid ADOT Destination Address' })
+											} else if (this.state.amountToSend < constants.DUST_AMOUNT_IN_ADOT) {
 												this.setState({
 													error:
 														'Make sure to enter a valid amount. Minimum ' +
-														send.DUST_AMOUNT_IN_DASH +
-														' DASH',
+														constants.DUST_AMOUNT_IN_ADOT +
+														' ADOT',
 												})
 											} else if (this.state.amountToSend > this.props.totalBalance) {
 												var balanceError =
 													'You got ' +
-													this.props.showDashNumber(this.props.totalBalance) +
+													this.props.showAlterdotNumber(this.props.totalBalance) +
 													', the amount to sent was corrected, please check and press Next again.'
 												this.setState({
 													amountToSend: this.props.totalBalance,
 													amountUsd:
-														this.props.totalBalance * this.props.getSelectedCurrencyDashPrice(),
+														this.props.totalBalance * this.props.getSelectedCurrencyAlterdotPrice(),
 													error: balanceError,
 												})
 											} else {

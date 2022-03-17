@@ -3,10 +3,12 @@ import styled from 'styled-components'
 
 const Panel = styled.div`
 	position: relative;
-	background: #fff;
+	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+	backdrop-filter: blur(4px);
+	z-index: 2;
 	padding: 15px;
 	border-radius: 15px;
-	box-shadow: 3px 3px 3px #dadbdb;
+	box-shadow: 3px 3px 3px #9f434e;
 	overflow: hidden;
 	@media screen and (max-width: 768px) {
 		float: none;
@@ -15,7 +17,7 @@ const Panel = styled.div`
 	}
 `
 
-export class ReceiveDash extends Component {
+export class Receive extends Component {
 	render = () => {
 		var addressLink =
 			'https://' +
@@ -71,7 +73,7 @@ export class ReceiveDash extends Component {
 												: 'black',
 									}}
 								>
-									{this.props.showDashNumber(
+									{this.props.showAlterdotNumber(
 										this.props.addressBalances && this.props.addressBalances[a]
 									)}
 								</div>

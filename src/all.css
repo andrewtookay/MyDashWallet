@@ -19,6 +19,14 @@ body {
 	background-position-x: right;
 	background-position-y: bottom;
 }
+#root {
+	display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: center;
+    background: #e1a3a1;
+	height: 100%;
+}
 p,
 h1,
 h2,
@@ -52,10 +60,14 @@ li {
 }
 a,
 .link {
-	color: #f1592a;
+	color: #fff;
 	text-decoration: none;
 	cursor: pointer;
 	outline: none;
+}
+.tx_link a {
+    color: #621b57;
+    font-weight: 600;
 }
 a:hover,
 .link:hover {
@@ -182,7 +194,7 @@ button:active {
 	text-align: right;
 	padding-left: 0;
 }
-#transactions .colDash {
+#transactions .colAlterdot {
 	width: 16%;
 	text-align: right;
 	padding-right: 10px;
@@ -199,7 +211,7 @@ button:active {
 }
 #transactions table tr td {
 	padding: 4px 8px;
-	font-size: 12px;
+	font-size: 14px;
 }
 #transactions table tr th {
 	padding: 0;
@@ -212,14 +224,16 @@ button:active {
 	font-size: 15px;
 }
 #transactions tr.sent .colDate,
-#transactions tr.sent .colDash,
+#transactions tr.sent .colAlterdot,
 #transactions tr.sent .colFiat {
-	color: #621b57;
+	color: #116830;
+    font-weight: 600;
 }
 #transactions tr.received .colDate,
-#transactions tr.received .colDash,
+#transactions tr.received .colAlterdot,
 #transactions tr.received .colFiat {
-	color: #f1592a;
+	color: #5e1c07;
+	font-weight: 600;
 }
 label {
 	margin-bottom: 0;
@@ -251,6 +265,35 @@ label {
 	display: flex;
 	width: 100%;
 	flex-flow: row;
+	align-items: center;
+}
+.circle1, .circle2, .circle3 {
+	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.1));
+	position: absolute;
+}
+.circle1 {
+	top: 44%;
+	left: 48%;
+	border-radius: 8rem;
+	height: 8rem;
+	width: 8rem;
+	z-index: 1;
+}
+.circle2 {
+	top: 18%;
+	right: 6%;
+	border-radius: 10rem;
+	width: 10rem;
+	height: 10rem;
+	z-index: 1;
+}
+.circle3 {
+	top: 50%;
+    left: 20%;
+	border-radius: 6rem;
+	width: 6rem;
+	height: 6rem;
+	z-index: 1;
 }
 @media screen and (max-width: 1000px) {
 	.main-left, .main-right {

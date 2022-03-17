@@ -2,14 +2,14 @@
 import { Link } from 'react-router-dom'
 import update from 'immutability-helper'
 import { Balances } from './Balances'
-import { SendDash } from './SendDash'
-import { ReceiveDash } from './ReceiveDash'
+import { Send } from './Send'
+import { Receive } from './Receive'
 import { Transactions } from './Transactions'
 import { Mnemonic } from 'alterdot-lib'
 import SkyLight from 'react-skylight'
 import { NotificationContainer, NotificationManager } from 'react-notifications'
 import 'react-notifications/lib/notifications.css'
-import * as send from './send.js'
+import * as constants from './constants.js'
 
 export class LoggedIn extends Component {
 	constructor(props) {
@@ -27,7 +27,7 @@ export class LoggedIn extends Component {
 					: '',
 		}
 		for (var address of props.addresses)
-			if (this.isValidDashAddress(address)) props.addressBalances[address] = 0
+			if (this.isValidAlterdotAddress(address)) props.addressBalances[address] = 0
 		this.updatingBalanceController = new window.AbortController()
 		var component = this
 		this.skipInitialTxInterval = setTimeout(() => {
@@ -69,12 +69,12 @@ export class LoggedIn extends Component {
 			this.lastAmountChange = tx.amountChange
 			NotificationManager.warning(
 				'Incoming transaction',
-				'+' + this.showDashNumber(tx.amountChange)
+				'+' + this.showAlterdotNumber(tx.amountChange)
 			)
 		}
 	}
-	showDashNumber = amount => {
-		return this.props.showNumber(amount, 8) + ' DASH'
+	showAlterdotNumber = amount => {
+		return this.props.showNumber(amount, 8) + ' ADOT'
 	}
 	fillTransactionFromAddress = address => {
 		var isBlockchair = this.props.explorer === 'blockchair.com/dash'
@@ -96,7 +96,7 @@ export class LoggedIn extends Component {
 				for (var index = 0; index < txs.length; index++) {
 					const tx = txs[index]
 					var time = isBlockchair ? new Date(tx['time']) : new Date(tx['time'] * 1000)
-					var amountChange = isBlockchair ? tx['balance_change'] * send.DASH_PER_DUFF : 0
+					var amountChange = isBlockchair ? tx['balance_change'] * constants.ADOT_PER_DUFF : 0
 					if (!isBlockchair) {
 						const vin = tx['vin']
 						for (var i = 0; i < vin.length; i++)
@@ -128,11 +128,11 @@ export class LoggedIn extends Component {
 	fillTransactions = addresses => {
 		for (var address of addresses) this.fillTransactionFromAddress(address)
 	}
-	// Loops through all known Dash addresses and checks the balance and sums up to total amount we got
+	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
 	balanceCheck = () => {
 		console.log("balanceCheck:", this.props.addressBalances);
 		for (var addressToCheck of Object.keys(this.props.addressBalances))
-			if (this.isValidDashAddress(addressToCheck) && !this.skipOldEmptyAddresses(addressToCheck))
+			if (this.isValidAlterdotAddress(addressToCheck) && !this.skipOldEmptyAddresses(addressToCheck))
 				this.updateAddressBalance(addressToCheck, this.props.addressBalances[addressToCheck])
 	}
 	skipOldEmptyAddresses = addressToCheck => {
@@ -153,7 +153,7 @@ export class LoggedIn extends Component {
 		}
 		return false
 	}
-	isValidDashAddress = address => {
+	isValidAlterdotAddress = address => {
 		return (
 			address &&
 			address.length >= 34 &&
@@ -181,7 +181,7 @@ export class LoggedIn extends Component {
 				if (isBlockchair) data = data['data'][addressToCheck]['address']
 				if (data && !isNaN(data.balance)) {
 					var newBalance = isBlockchair
-						? data.balance * send.DASH_PER_DUFF
+						? data.balance * constants.ADOT_PER_DUFF
 						: parseFloat(data.balance)
 					if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance)
 					var rememberToUpdateTotalAmount =
@@ -191,7 +191,7 @@ export class LoggedIn extends Component {
 							console.log('Updating balance of ' + addressToCheck + ': ' + newBalance)
 						// Exclude any masternode amounts
 						if (newBalance < 1000) component.props.addressBalances[addressToCheck] = newBalance
-						if (component.props.addressBalances[addressToCheck] < send.DUST_AMOUNT_IN_DASH)
+						if (component.props.addressBalances[addressToCheck] < constants.DUST_AMOUNT_IN_ADOT)
 							component.props.addressBalances[addressToCheck] = 0
 					}
 					// This is the last address in our list? And it has received something, then add the next one at the end
@@ -248,7 +248,7 @@ export class LoggedIn extends Component {
 		var totalAmount = 0
 		var cachedText = ''
 		for (var key of Object.keys(this.props.addressBalances))
-			if (this.isValidDashAddress(key)) {
+			if (this.isValidAlterdotAddress(key)) {
 				var amount = this.props.addressBalances[key]
 				totalAmount += amount
 				cachedText += key + '|' + amount + '|'
@@ -261,7 +261,7 @@ export class LoggedIn extends Component {
 		if (this.props.totalBalance !== totalAmount) {
 			if (totalAmount > this.props.totalBalance)
 				NotificationManager.info(
-					'Successfully updated balance: ' + this.showDashNumber(totalAmount)
+					'Successfully updated balance: ' + this.showAlterdotNumber(totalAmount)
 				)
 			this.props.onUpdateBalanceAndAddressesStorage(
 				totalAmount,
@@ -274,9 +274,9 @@ export class LoggedIn extends Component {
 		if (this.props.trezor) {
 			for (var used of this.props.trezor.usedAddresses)
 				this.updateAddressBalance(used.address, this.props.addressBalances[used.address])
-			var balance = this.props.trezor.balance * send.DASH_PER_DUFF
+			var balance = this.props.trezor.balance * constants.ADOT_PER_DUFF
 			if (balance > this.props.totalBalance)
-				NotificationManager.info('Successfully updated balance: ' + this.showDashNumber(balance))
+				NotificationManager.info('Successfully updated balance: ' + this.showAlterdotNumber(balance))
 			this.props.onUpdateBalanceAndAddressesStorage(
 				balance,
 				Object.keys(this.props.addressBalances)
@@ -322,11 +322,11 @@ export class LoggedIn extends Component {
 					tx = tx['data'][txId]
 					this.addTransaction({
 						id: txId,
-						amountChange: tx['inputs'][txIndex]['value'] * send.DASH_PER_DUFF,
+						amountChange: tx['inputs'][txIndex]['value'] * constants.ADOT_PER_DUFF,
 						time: new Date(tx['transaction']['time']),
 						confirmations: tx['transaction']['block_id'] - 1205434,
 						size: tx['transaction'].size,
-						fees: tx['transaction'].fees * send.DASH_PER_DUFF,
+						fees: tx['transaction'].fees * constants.ADOT_PER_DUFF,
 						txlock: tx['transaction'].is_instant_lock,
 					})
 				} else {
@@ -364,6 +364,7 @@ export class LoggedIn extends Component {
 				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
 			var mnemonic = new Mnemonic(hdS)
 			var xpriv = mnemonic.toHDPrivateKey()
+			console.log("here");
 			lastAddress = xpriv
 				.derive("m/44'/5'/0'/0/" + this.state.addresses.length)
 				.privateKey.toAddress()
@@ -376,7 +377,7 @@ export class LoggedIn extends Component {
 		console.log("lastAddress1", lastAddress);
 		return lastAddress;
 	}
-	getSelectedCurrencyDashPrice = () => {
+	getSelectedCurrencyAlterdotPrice = () => {
 		return this.state.selectedCurrency === 'EUR'
 			? this.props.priceEur
 			: this.state.selectedCurrency === 'GBP'
@@ -404,23 +405,23 @@ export class LoggedIn extends Component {
 			<div id="main" className="main_dashboard_otr">
 				<h1>{this.props.unlockedText}</h1>
 				<div className='main-left'>
-					<SendDash
+					<Send
 						explorer={this.props.explorer}
 						popupDialog={this.props.popupDialog}
 						addressBalances={this.props.addressBalances}
 						hdSeedE={this.props.hdSeedE}
-						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}
 						isCorrectPasswordHash={this.props.isCorrectPasswordHash}
 						getUnusedAddress={this.getUnusedAddress}
 						totalBalance={this.props.totalBalance}
 						addresses={this.state.addresses}
 						showNumber={this.props.showNumber}
-						showDashNumber={this.showDashNumber}
+						showAlterdotNumber={this.showAlterdotNumber}
 						onDecrypt={this.props.onDecrypt}
 						addTransaction={this.addTransaction}
 						setRememberedPassword={rememberPassword => this.setState({ password: rememberPassword })}
-						isValidDashAddress={this.isValidDashAddress}
+						isValidAlterdotAddress={this.isValidAlterdotAddress}
 						onUpdateBalanceAndAddressesStorage={this.props.onUpdateBalanceAndAddressesStorage}
 						setNewTotalBalance={newBalance =>
 							this.props.onUpdateBalanceAndAddressesStorage(newBalance, this.state.addresses)
@@ -429,9 +430,9 @@ export class LoggedIn extends Component {
 					<Transactions
 						explorer={this.props.explorer}
 						transactions={this.state.transactions}
-						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}
-						showDashNumber={this.showDashNumber}
+						showAlterdotNumber={this.showAlterdotNumber}
 						showNumber={this.props.showNumber}
 					/>
 				</div>
@@ -442,19 +443,22 @@ export class LoggedIn extends Component {
 						showNumber={this.props.showNumber}
 						getSign={this.getSign}
 						setMode={this.props.setMode}
-						getSelectedCurrencyDashPrice={this.getSelectedCurrencyDashPrice}
+						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}
 						setSelectedCurrency={value => this.setState({ selectedCurrency: value })}
 					/>
-					<ReceiveDash
+					<Receive
 						explorer={this.props.explorer}
 						lastUnusedAddress={this.state.lastUnusedAddress}
 						getUnusedAddress={this.getUnusedAddress}
 						addressBalances={this.props.addressBalances}
 						reversedAddresses={this.state.addresses.slice().reverse()}
-						showDashNumber={this.showDashNumber}
+						showAlterdotNumber={this.showAlterdotNumber}
 					/>
 				</div>
+				<div className='circle1'></div>
+				<div className='circle2'></div>
+				<div className='circle3'></div>
 				<SkyLight
 					dialogStyles={this.props.popupDialog}
 					hideOnOverlayClicked

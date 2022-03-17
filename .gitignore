@@ -32,6 +32,7 @@
 *.app
 
 #excluded files
+disabled/
 node_modules/
 obj/
 bin/
