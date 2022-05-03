@@ -5,19 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faBars,
 	faWallet,
-	//faRandom,
-	//faGift,
-	//faComments,
-	//faChartBar,
 	faQuestion,
-	//faSitemap,
+	faTags,
+	faCogs,
 	faSignOutAlt,
-	//faBookDead,
 } from '@fortawesome/free-solid-svg-icons'
-import Dropdown from 'react-dropdown'
 import 'react-dropdown/style.css'
-
-const explorerOptions = ['insight.alterdot.network']
 
 const Container = styled.div`
 	transition: all linear 0.2s;
@@ -227,6 +220,18 @@ export class Menu extends Component {
 							</Link>
 						</li>*/}
 						<li>
+							<Link to="/domains" onClick={() => this.props.setMode('domains')}>
+								<FontAwesomeIcon icon={faTags} />
+								<span>Domains</span>
+							</Link>
+						</li>
+						<li>
+							<Link to="/settings" onClick={() => this.props.setMode('settings')}>
+								<FontAwesomeIcon icon={faCogs} />
+								<span>Settings</span>
+							</Link>
+						</li>
+						<li>
 							<Link to="/help" onClick={() => this.props.setMode('help')}>
 								<FontAwesomeIcon icon={faQuestion} />
 								<span>Help</span>
@@ -248,16 +253,6 @@ export class Menu extends Component {
 				</MenuElements>
 				<Illustration collapsed={collapsed} />
 				<MenuFooter collapsed={collapsed}>
-					<div className='full-line'>
-						<span style={{ fontSize: '12px' }}>API: </span>
-						<Dropdown
-							options={explorerOptions}
-							onChange={this.props.onSelectExplorer}
-							value={explorerOptions[0]}
-							placeholder="Blockchain Explorer"
-						/>
-					</div>
-					<br />
 					<center>
 						<a
 							href="https://github.com/DeltaEngine/MyDashWallet"

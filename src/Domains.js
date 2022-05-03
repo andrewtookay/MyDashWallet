@@ -1,9 +1,8 @@
-﻿import React, { Component } from 'react'
+import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 import update from 'immutability-helper'
 import { Balances } from './Balances'
 import { Send } from './Send'
-import { Receive } from './Receive'
 import { Transactions } from './Transactions'
 import { Mnemonic } from 'alterdot-lib'
 import SkyLight from 'react-skylight'
@@ -11,7 +10,7 @@ import { NotificationContainer, NotificationManager } from 'react-notifications'
 import 'react-notifications/lib/notifications.css'
 import * as constants from './constants.js'
 
-export class LoggedIn extends Component {
+export class Domains extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
@@ -446,14 +445,6 @@ export class LoggedIn extends Component {
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}
 						setSelectedCurrency={value => this.setState({ selectedCurrency: value })}
-					/>
-					<Receive
-						explorer={this.props.explorer}
-						lastUnusedAddress={this.state.lastUnusedAddress}
-						getUnusedAddress={this.getUnusedAddress}
-						addressBalances={this.props.addressBalances}
-						reversedAddresses={this.state.addresses.slice().reverse()}
-						showAlterdotNumber={this.showAlterdotNumber}
 					/>
 				</div>
 				<div className='circle1'></div> {/* TODO_ADOT_MEDIUM move to background */}

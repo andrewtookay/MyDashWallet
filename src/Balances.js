@@ -5,8 +5,7 @@ import {
 	faMoneyBill,
 	faDollarSign,
 	faEuroSign,
-	faPoundSign,
-	faLock,
+	faPoundSign
 } from '@fortawesome/free-solid-svg-icons'
 
 const BalancesPanel = styled.div`

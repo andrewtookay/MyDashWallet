@@ -1,11 +1,8 @@
 ﻿import React, { Component } from 'react'
 import { Menu } from './Menu'
-//import { Mix } from './Mix'
-//import { Tip } from './Tip'
-//import { Chat } from './Chat'
-//import { Stats } from './Stats'
+import { Domains } from './Domains'
 import { Help } from './Help'
-//import { ScriptHack } from './ScriptHack'
+import { Settings } from './Settings'
 import { LoggedIn } from './LoggedIn'
 import { Login } from './Login'
 import CryptoJS from 'crypto-js'
@@ -27,7 +24,7 @@ const PageContainer = styled.div`
 		}
 	}
 `
-const AlterdotPricePanel = styled.div`
+/*const AlterdotPricePanel = styled.div`
 	color: #3778b9;
 	-webkit-box-flex: 1;
 	-webkit-flex: 1 auto;
@@ -61,7 +58,7 @@ const AlterdotPricePanel = styled.div`
 		margin-top: 5px;
 		margin-right: 10px;
 	}
-`
+`*/
 const MainContainer = styled.div`
 	display: inline-block;
 	vertical-align: middle;
@@ -198,7 +195,9 @@ export default class App extends Component {
 			: window.location.href.endsWith('stats') || window.location.href.endsWith('statistics')
 			? 'stats'
 			: this first half is disabled*/
-		return window.location.href.endsWith('help') || window.location.href.includes('about')
+		return window.location.href.endsWith('domains')
+			? 'domains'
+			: window.location.href.endsWith('help') || window.location.href.includes('about')
 			? 'help'
 			//: window.location.href.endsWith('scripthack')
 			//? 'scripthack'
@@ -416,7 +415,6 @@ export default class App extends Component {
 			<PageContainer>
 				<Menu
 					onLogout={this.logout}
-					onSelectExplorer={this.selectExplorer}
 					mode={this.state.mode}
 					setMode={this.setMode}
 					hardwareWallet={this.state.ledger || this.state.trezor}
@@ -450,7 +448,37 @@ export default class App extends Component {
 					) : this.state.mode === 'stats' ? (
 						<Stats />
 					) : this first half is disabled*/
-					this.state.mode === 'help' ? (
+					this.state.mode === 'domains' && this.state.hdSeedE && this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
+						<Domains
+							explorer={this.state.explorer}
+							popupDialog={popupDialog}
+							addressBalances={addressBalances}
+							unlockedText={
+								(this.state.trezor ? 'Trezor' : this.state.ledger ? 'Ledger' : 'Wallet')
+							}
+							rememberPassword={this.state.rememberPassword}
+							showNumber={this.showNumber}
+							totalBalance={this.state.totalBalance}
+							priceUsd={this.state.priceUsd}
+							priceEur={this.state.priceEur}
+							priceGbp={this.state.priceGbp}
+							addresses={this.state.addresses}
+							ledger={this.state.ledger}
+							trezor={this.state.trezor}
+							hdSeedE={this.state.hdSeedE}
+							encryptedPasswordHash={this.state.encryptedPasswordHash}
+							isCorrectPasswordHash={this.isCorrectPasswordHash}
+							onDecrypt={this.decrypt}
+							onEncrypt={this.encrypt}
+							setMode={this.setMode}
+							onUpdateBalanceAndAddressesStorage={this.updateBalanceAndAddressesStorage}
+						/>
+					) : this.state.mode === 'settings' ? (
+						<Settings
+							explorer={this.state.explorer}
+							onSelectExplorer={this.selectExplorer}
+						/>
+					) : this.state.mode === 'help' ? (
 						<Help />
 					//) : this.state.mode === 'scripthack' ? (
 					//	<ScriptHack />

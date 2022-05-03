@@ -44,7 +44,7 @@ h2,
 h3,
 h4 {
 	font-family: 'Montserrat', sans-serif;
-	padding-bottom: 20px;
+	padding-bottom: 16px;
 }
 h5,
 h6 {
@@ -185,53 +185,45 @@ input[type='button']:active,
 button:active {
 	box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
 }
-#transactions .colTx {
+#transactions {
+	height: 80%;
+	overflow-y: scroll;
+	scrollbar-width: none;
+}
+.tx-row .colTx {
 	padding-left: 0;
 	width: 25%;
 }
-#transactions .colDate {
+.tx-row .colDate {
 	width: 30%;
 	text-align: right;
 	padding-left: 0;
 }
-#transactions .colAlterdot {
-	width: 16%;
+.tx-row .colAlterdot {
+	width: 28%;
 	text-align: right;
-	padding-right: 10px;
 }
-#transactions .colFiat {
-	width: 12%;
+.tx-row .colFiat {
+	width: 17%;
 	text-align: right;
-	padding-right: 10px;
 }
-#transactions .colConfirmations {
+.tx-row .colConfirmations {
 	display: none; /*not really needed, everything is always confirmed*/
 	width: 17%;
 	padding-right: 0;
 }
-#transactions table tr td {
-	padding: 4px 8px;
-	font-size: 14px;
-}
-#transactions table tr th {
-	padding: 0;
-	font-weight: 500;
-}
-#transactions table tr:nth-child(even) {
+#transactions .tx-row:nth-child(odd) {
 	background-color: #e5e9ff;
 }
-#transactions td {
-	font-size: 15px;
-}
-#transactions tr.sent .colDate,
-#transactions tr.sent .colAlterdot,
-#transactions tr.sent .colFiat {
+#transactions .tx-row.sent .colDate,
+#transactions .tx-row.sent .colAlterdot,
+#transactions .tx-row.sent .colFiat {
 	color: #116830;
     font-weight: 600;
 }
-#transactions tr.received .colDate,
-#transactions tr.received .colAlterdot,
-#transactions tr.received .colFiat {
+#transactions .tx-row.received .colDate,
+#transactions .tx-row.received .colAlterdot,
+#transactions .tx-row.received .colFiat {
 	color: #5e1c07;
 	font-weight: 600;
 }
@@ -249,8 +241,12 @@ label {
 .Dropdown-menu {
 	font-size: 12px;
 }
+#main {
+	height: 100%;
+}
 .main-left, .main-right {
 	width: 48%;
+	height: 100%;
 }
 .main-left {
 	float: left;
@@ -294,6 +290,12 @@ label {
 	width: 6rem;
 	height: 6rem;
 	z-index: 1;
+}
+.tx-row {
+	display: flex;
+	flex-flow: row;
+	padding: 2px 6px;
+	border-radius: 6px;
 }
 @media screen and (max-width: 1000px) {
 	.main-left, .main-right {

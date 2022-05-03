@@ -41,7 +41,7 @@ export class Help extends Component {
 						</div>
 						<div className="col col-sm-4 offset-sm-1">
 							<img
-								src="https://media.dash.org/wp-content/uploads/alterdotLogoWithName.png"
+								src="/images/alterdotLogoWithName.png"
 								style={{
 									width: '400px',
 								}}
