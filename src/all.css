@@ -44,7 +44,7 @@ h2,
 h3,
 h4 {
 	font-family: 'Montserrat', sans-serif;
-	padding-bottom: 16px;
+	padding-bottom: 18px;
 }
 h5,
 h6 {
@@ -186,7 +186,7 @@ button:active {
 	box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
 }
 #transactions {
-	height: 80%;
+	height: 76%;
 	overflow-y: scroll;
 	scrollbar-width: none;
 }

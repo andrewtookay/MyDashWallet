@@ -90,6 +90,15 @@ export class Receive extends Component {
 				>
 					New Address
 				</button>
+				<button
+					style={{ float: 'right', marginRight: '10px' }}
+
+					onClick={() =>
+						this.props.scanWalletAddresses(10)
+					}
+				>
+					Scan Wallet
+				</button>
 			</Panel>
 		)
 	}

@@ -15,7 +15,7 @@ const Panel = styled.div`
 		width: 100%;
 		font-size: 12px;
 	}
-	height: 40%;
+	height: 42%;
 `
 
 export class Transactions extends Component {
@@ -100,11 +100,9 @@ export class Transactions extends Component {
 					)
 				})}
 				{transactions.length === 0 && (
-					<tr>
-						<td colSpan="5">
-							No recent transactions (or still loading, please wait a few seconds)
-						</td>
-					</tr>
+					<div>
+						No recent transactions (or still loading, please wait a few seconds)
+					</div>
 				)}
 			</div>
 		)

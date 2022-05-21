@@ -27,8 +27,8 @@ export class LoggedIn extends Component {
 					: '',
 		}
 		for (var address of props.addresses)
-			if (this.isValidAlterdotAddress(address)) props.addressBalances[address] = 0
-		this.updatingBalanceController = new window.AbortController()
+			if (this.isValidAlterdotAddress(address)) props.addressBalances[address] = 0;
+		this.updatingBalanceController = new window.AbortController();
 		var component = this
 		this.skipInitialTxInterval = setTimeout(() => {
 			component.setState({ skipInitialTransactionsNotifications: false })
@@ -39,22 +39,17 @@ export class LoggedIn extends Component {
 		}, 70000)
 	}
 	componentDidMount() {
-		this.setAddressAndLookForLastUsedHdWalletAddress(this.props.addresses)
-		this.fillTransactions(this.props.addresses)
-		//document.body.style.backgroundImage = "url('/images/BackgroundWalletIllustration.png')"
-		if (
-			!this.props.ledger &&
-			!this.props.trezor &&
-			this.props.totalBalance * this.props.priceUsd > 100
-		)
-			this.hdWalletTooMuchBalanceWarning.show()
+		this.checkAndRestoreBalances(this.props.addresses);
+		this.fillTransactions(this.props.addresses);
+
+		if (this.props.totalBalance * this.props.priceUsd > 100)
+			this.hdWalletTooMuchBalanceWarning.show();
 	}
 	componentWillUnmount() {
-		document.body.style.backgroundImage = null
 		clearInterval(this.skipInitialTxInterval)
 		clearInterval(this.skipEmptyAddressesInterval)
 		clearInterval(this.updateBalanceInterval)
-		if (this.updatingBalanceController) this.updatingBalanceController.abort()
+		if (this.updatingBalanceController) this.updatingBalanceController.abort();
 	}
 	addTransaction = tx => {
 		// If we already got this tx, there is nothing we need to do, new ones are just added on top
@@ -77,81 +72,52 @@ export class LoggedIn extends Component {
 		return this.props.showNumber(amount, 8) + ' ADOT'
 	}
 	fillTransactionFromAddress = address => {
-		var isBlockchair = this.props.explorer === 'blockchair.com/dash'
 		fetch(
-			isBlockchair
-				? 'https://api.blockchair.com/dash/dashboards/address/' +
-						address +
-						'?transaction_details=true&key=' +
-						process.env.REACT_APP_BLOCKCHAIR_API_KEY
-				: 'https://' + this.props.explorer + '/insight-api/txs/?address=' + address,
+			'https://' + this.props.explorer + '/insight-api/txs/?address=' + address,
 			{
 				mode: 'cors',
 				cache: 'no-cache',
-			}
-		)
+			})
 			.then(response => response.json())
 			.then(data => {
-				const txs = isBlockchair ? data['data'][address]['transactions'] : data.txs
+				const txs = data.txs;
 				for (var index = 0; index < txs.length; index++) {
-					const tx = txs[index]
-					var time = isBlockchair ? new Date(tx['time']) : new Date(tx['time'] * 1000)
-					var amountChange = isBlockchair ? tx['balance_change'] * constants.ADOT_PER_DUFF : 0
-					if (!isBlockchair) {
-						const vin = tx['vin']
-						for (var i = 0; i < vin.length; i++)
-							if (this.isOwnAddress(vin[i]['addr'], address))
-								amountChange -= parseFloat(vin[i]['value'])
-						const vout = tx['vout']
-						for (var j = 0; j < vout.length; j++)
-							if (this.isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
-								amountChange += parseFloat(vout[j]['value'])
-					}
+					const tx = txs[index];
+					var time = new Date(tx['time'] * 1000);
+					var amountChange = 0;
+					const vin = tx['vin'];
+					for (var i = 0; i < vin.length; i++)
+						if (this.isOwnAddress(vin[i]['addr'], address))
+							amountChange -= parseFloat(vin[i]['value']);
+					const vout = tx['vout']
+					for (var j = 0; j < vout.length; j++)
+						if (this.isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
+							amountChange += parseFloat(vout[j]['value']);
 					this.addTransaction({
-						id: isBlockchair ? tx.hash : tx.txid,
+						id: tx.txid,
 						amountChange: amountChange,
 						time: time,
 						confirmations: tx.confirmations,
 						size: tx.size,
 						fees: tx.fees,
 						txlock: tx.txlock,
-					})
+					});
 				}
 			})
 	}
 	isOwnAddress = (addressToCheck, sendAddress) => {
-		if (addressToCheck === sendAddress) return true
-		for (var i = 0; i < this.state.addresses.length; i++)
-			if (addressToCheck === this.state.addresses[i]) return true
-		return false
+		if (addressToCheck === sendAddress) return true;
+		return this.state.addresses.includes(addressToCheck);
 	}
 	fillTransactions = addresses => {
-		for (var address of addresses) this.fillTransactionFromAddress(address)
+		for (var address of addresses) this.fillTransactionFromAddress(address);
 	}
 	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
 	balanceCheck = () => {
-		console.log("balanceCheck:", this.props.addressBalances);
+		console.log("balanceCheck addressBalances", this.props.addressBalances);
 		for (var addressToCheck of Object.keys(this.props.addressBalances))
-			if (this.isValidAlterdotAddress(addressToCheck) && !this.skipOldEmptyAddresses(addressToCheck))
+			if (this.isValidAlterdotAddress(addressToCheck))
 				this.updateAddressBalance(addressToCheck, this.props.addressBalances[addressToCheck])
-	}
-	skipOldEmptyAddresses = addressToCheck => {
-		// With HD Wallets we will end up with tons of empty addresses from the beginning.
-		// Those are usually empty (if the HD wallet is used properly), we can skip checking them
-		// most of the time (still update them after like 1 minute just to make sure)
-		if (this.state.skipEmptyAddresses) {
-			// Only skip checking the initial addresses passed into here
-			for (var i = 0; i < this.props.addresses.length - 2; i++)
-				if (
-					addressToCheck === this.props.addresses[i] &&
-					this.props.addressBalances[addressToCheck] === 0
-				)
-					return true
-		} else {
-			// Reset after checking once (if there is any balance on an old address, it will included now)
-			this.setState({ skipEmptyAddresses: false })
-		}
-		return false
 	}
 	isValidAlterdotAddress = address => {
 		return (
@@ -161,100 +127,50 @@ export class LoggedIn extends Component {
 		)
 	}
 	updateAddressBalance = (addressToCheck, oldBalance) => {
-		var component = this
-		var isBlockchair = this.props.explorer === 'blockchair.com/dash'
+		var component = this;
 		fetch(
-			isBlockchair
-				? 'https://api.blockchair.com/dash/dashboards/address/' +
-						addressToCheck +
-						'?key=' +
-						process.env.REACT_APP_BLOCKCHAIR_API_KEY
-				: 'https://' + this.props.explorer + '/insight-api/addr/' + addressToCheck,
+			'https://' + this.props.explorer + '/insight-api/addr/' + addressToCheck,
 			{
 				mode: 'cors',
 				cache: 'no-cache',
 				signal: this.updatingBalanceController.signal,
-			}
-		)
+			})
 			.then(response => response.json())
 			.then(data => {
-				if (isBlockchair) data = data['data'][addressToCheck]['address']
 				if (data && !isNaN(data.balance)) {
-					var newBalance = isBlockchair
-						? data.balance * constants.ADOT_PER_DUFF
-						: parseFloat(data.balance)
-					if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance)
-					var rememberToUpdateTotalAmount =
-						newBalance < 1000 && component.props.addressBalances[addressToCheck] !== newBalance
+					var newBalance = parseFloat(data.balance);
+					if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance);
 					if (!oldBalance || newBalance !== oldBalance) {
 						if (oldBalance && oldBalance > 0)
-							console.log('Updating balance of ' + addressToCheck + ': ' + newBalance)
-						// Exclude any masternode amounts
-						if (newBalance < 1000) component.props.addressBalances[addressToCheck] = newBalance
+							console.log('Updating balance of ' + addressToCheck + ': ' + newBalance);
+						// Exclude any masternode amounts TODO_ADOT_MEDIUM exclusion for MNs
+						if (newBalance !== 10000) component.props.addressBalances[addressToCheck] = newBalance;
 						if (component.props.addressBalances[addressToCheck] < constants.DUST_AMOUNT_IN_ADOT)
 							component.props.addressBalances[addressToCheck] = 0
 					}
-					// This is the last address in our list? And it has received something, then add the next one at the end
-					var lastUnusedAddress = this.state.addresses[this.state.addresses.length - 1]
-					//var lastUsedAddress = this.state.addresses.length > 1 ? this.state.addresses[this.state.addresses.length - 2] : lastUnusedAddress
-					// ADOT_COMMENT after the last generated address was used a new one is generated, kind of annoying behaviour
-					if (
-						addressToCheck === lastUnusedAddress &&
-						(newBalance > 0 || parseFloat(data.totalReceived) > 0 || data.received > 0) && false // added this false to cancel this
-					) {
-						if (this.props.trezor) {
-							//not needed in wallet mode, horrible user experience having to confirm each address, we have all addresses already for trezor!
-						} else if (this.props.ledger) {
-							this.props.ledger
-								.getWalletPublicKey("44'/5'/0'/0/" + this.state.addresses.length)
-								.then(function(result) {
-									component.addLastAddress(result.bitcoinAddress)
-									component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses()
-								})
-						} else if (this.state.password) {
-							var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
-							if (hdS !== '') {
-								var mnemonic = new Mnemonic(hdS)
-								var xpriv = mnemonic.toHDPrivateKey()
-								lastUnusedAddress = xpriv
-									.derive("m/44'/5'/0'/0/" + component.state.addresses.length)
-									.privateKey.toAddress()
-									.toString()
-								component.addLastAddress(lastUnusedAddress)
-								rememberToUpdateTotalAmount = true
-							}
-						} else if (this.showPasswordDialog) {
-							this.showPasswordDialog.show()
-						}
-						if (rememberToUpdateTotalAmount)
-							component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses()
-					}
-					// This is the last address in our list so we should also update the total balance
-					var lastAddress = this.state.addresses[this.state.addresses.length - 1]
-					if (addressToCheck === lastAddress)
 					component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses();
 				}
 			})
-			.catch(error => console.log(error))
+			.catch(error => console.log(error));
 	}
 	addLastAddress = lastAddress => {
-		var addresses = this.state.addresses
-		addresses.push(lastAddress)
-		this.props.addressBalances[lastAddress] = 0
-		this.setState({ addresses: addresses, lastUnusedAddress: lastAddress })
-		return addresses
+		var addresses = this.state.addresses;
+		addresses.push(lastAddress);
+		this.props.addressBalances[lastAddress] = 0;
+		this.setState({ addresses: addresses, lastUnusedAddress: lastAddress });
+		return addresses;
 	}
 	updateLocalStorageBalances = () => {
-		var totalAmount = 0
-		var cachedText = ''
+		var totalAmount = 0;
+		var cachedText = '';
 		for (var key of Object.keys(this.props.addressBalances))
 			if (this.isValidAlterdotAddress(key)) {
 				var amount = this.props.addressBalances[key]
 				totalAmount += amount
 				cachedText += key + '|' + amount + '|'
 			}
-		localStorage.setItem('addressBalances', cachedText)
-		return totalAmount.toFixed(8)
+		localStorage.setItem('addressBalances', cachedText);
+		return totalAmount.toFixed(8);
 	}
 	updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses = () => {
 		var totalAmount = this.updateLocalStorageBalances()
@@ -270,112 +186,82 @@ export class LoggedIn extends Component {
 		}
 		this.fillTransactions(Object.keys(this.props.addressBalances))
 	}
-	setAddressAndLookForLastUsedHdWalletAddress = addresses => {
-		if (this.props.trezor) {
-			for (var used of this.props.trezor.usedAddresses)
-				this.updateAddressBalance(used.address, this.props.addressBalances[used.address])
-			var balance = this.props.trezor.balance * constants.ADOT_PER_DUFF
-			if (balance > this.props.totalBalance)
-				NotificationManager.info('Successfully updated balance: ' + this.showAlterdotNumber(balance))
-			this.props.onUpdateBalanceAndAddressesStorage(
-				balance,
-				Object.keys(this.props.addressBalances)
-			)
-			for (var tx of this.props.trezor.utxo)
-				this.fillTransactionFromId(tx.transactionHash, tx.index)
-			return
-		}
+	checkAndRestoreBalances = addresses => {
 		// Check if we were on this address the last time too, then we can use cached data
-		var compressedCachedAddressBalances = localStorage.getItem('addressBalances')
+		var cachedAddressBalances = localStorage.getItem('addressBalances');
 		//https://stackoverflow.com/questions/1208222/how-to-do-associative-array-hashing-in-javascript
-		var firstAddress = addresses[0]
+		var firstAddress = addresses[0];
 		// Was cached and still on the same wallet as last time? Then restore all known address balances
-		if (compressedCachedAddressBalances) {
-			var parts = compressedCachedAddressBalances.split('|')
-			if (firstAddress === parts[0]) {
+		if (cachedAddressBalances) {
+			var parts = cachedAddressBalances.split('|');
+			if (firstAddress === parts[0]) { // check first address so we're on the same wallet
 				for (var i = 0; i < parts.length / 2; i++)
 					if (parts[i * 2].length > 0)
 						this.props.addressBalances[parts[i * 2]] = parseFloat(parts[i * 2 + 1])
 			}
 		}
-		var component = this
+		var component = this;
 		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 10000)
 	}
 	fillTransactionFromId = (txId, txIndex) => {
-		if (!txId) return
-		var isBlockchair = this.props.explorer === 'blockchair.com/dash'
+		if (!txId) return;
 		fetch(
-			isBlockchair
-				? 'https://api.blockchair.com/dash/dashboards/transaction/' +
-						txId +
-						'?key=' +
-						process.env.REACT_APP_BLOCKCHAIR_API_KEY
-				: 'https://' + this.props.explorer + '/insight-api/tx/' + txId,
+			'https://' + this.props.explorer + '/insight-api/tx/' + txId,
 			{
 				mode: 'cors',
 				cache: 'no-cache',
-			}
-		)
+			})
 			.then(response => response.json())
 			.then(tx => {
-				if (isBlockchair) {
-					tx = tx['data'][txId]
-					this.addTransaction({
-						id: txId,
-						amountChange: tx['inputs'][txIndex]['value'] * constants.ADOT_PER_DUFF,
-						time: new Date(tx['transaction']['time']),
-						confirmations: tx['transaction']['block_id'] - 1205434,
-						size: tx['transaction'].size,
-						fees: tx['transaction'].fees * constants.ADOT_PER_DUFF,
-						txlock: tx['transaction'].is_instant_lock,
-					})
-				} else {
-					this.addTransaction({
-						id: txId,
-						amountChange: parseFloat(tx.vout[txIndex]['value']),
-						time: new Date(tx['time'] * 1000),
-						confirmations: tx.confirmations,
-						size: tx.size,
-						fees: tx.fees,
-						txlock: tx.txlock,
-					})
-				}
+				this.addTransaction({
+					id: txId,
+					amountChange: parseFloat(tx.vout[txIndex]['value']),
+					time: new Date(tx['time'] * 1000),
+					confirmations: tx.confirmations,
+					size: tx.size,
+					fees: tx.fees,
+					txlock: tx.txlock,
+				});
 			})
 	}
 	getUnusedAddress = () => {
-		var lastAddress = this.state.addresses[this.state.addresses.length - 1];
-		console.log("lastAddress0", lastAddress);
-		var component = this;
-		if (this.props.trezor) {
-			component.addLastAddress(this.props.trezor.unusedAddresses[1])
-		} else if (this.props.ledger) {
-			this.props.ledger
-				.getWalletPublicKey("44'/5'/0'/0/" + this.state.addresses.length)
-				.then(function(result) {
-					var addresses = component.addLastAddress(result.bitcoinAddress)
-					component.props.onUpdateBalanceAndAddressesStorage(
-						component.props.totalBalance,
-						addresses
-					)
-				})
-		} else if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
+		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
 			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
 			if (hdS === '')
 				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
 			var mnemonic = new Mnemonic(hdS)
 			var xpriv = mnemonic.toHDPrivateKey()
-			console.log("here");
-			lastAddress = xpriv
+			var lastAddress = xpriv
 				.derive("m/44'/5'/0'/0/" + this.state.addresses.length)
 				.privateKey.toAddress()
 				.toString()
-			var addresses = this.addLastAddress(lastAddress)
+			var addresses = this.addLastAddress(lastAddress);
 			this.props.onUpdateBalanceAndAddressesStorage(this.props.totalBalance, addresses)
 		} else {
-			this.showPasswordDialog.show()
+			this.showPasswordDialog.show();
 		}
-		console.log("lastAddress1", lastAddress);
-		return lastAddress;
+	}
+	scanWalletAddresses = (numberAddresses) => {
+		var walletAddresses = [];
+		
+		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
+			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
+			if (hdS === '')
+				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
+			var mnemonic = new Mnemonic(hdS)
+			var xpriv = mnemonic.toHDPrivateKey()
+			
+			for (var i = 0; i < numberAddresses; i++) {
+				var nextAddress = xpriv.derive("m/44'/5'/0'/0/" + i)
+									.privateKey.toAddress()
+									.toString();
+				walletAddresses.push(nextAddress);
+			}
+
+			this.props.onUpdateBalanceAndAddressesStorage(this.props.totalBalance, walletAddresses)
+		} else {
+			this.showPasswordDialog.show(); // this goes into getUnusedAddress
+		}
 	}
 	getSelectedCurrencyAlterdotPrice = () => {
 		return this.state.selectedCurrency === 'EUR'
@@ -451,6 +337,7 @@ export class LoggedIn extends Component {
 						explorer={this.props.explorer}
 						lastUnusedAddress={this.state.lastUnusedAddress}
 						getUnusedAddress={this.getUnusedAddress}
+						scanWalletAddresses={this.scanWalletAddresses}
 						addressBalances={this.props.addressBalances}
 						reversedAddresses={this.state.addresses.slice().reverse()}
 						showAlterdotNumber={this.showAlterdotNumber}
@@ -466,7 +353,7 @@ export class LoggedIn extends Component {
 					title="Enter your HD Wallet password"
 				>
 					<br />
-					Your password is required to login and generate your next HD wallet address
+					Your password is required to login and generate your next HD wallet address.
 					<input
 						type="password"
 						autoFocus={true}
@@ -474,9 +361,9 @@ export class LoggedIn extends Component {
 						value={this.state.password}
 						onChange={e => this.setState({ password: e.target.value })}
 						onKeyDown={e => {
-							if (e.keyCode === 13) {
-								this.showPasswordDialog.hide()
-								this.getUnusedAddress()
+							if (e.key === 'Enter') {
+								this.showPasswordDialog.hide();
+								this.getUnusedAddress();
 							}
 						}}
 					/>
@@ -484,8 +371,8 @@ export class LoggedIn extends Component {
 					<br />
 					<button
 						onClick={() => {
-							this.showPasswordDialog.hide()
-							this.getUnusedAddress()
+							this.showPasswordDialog.hide();
+							this.getUnusedAddress();
 						}}
 					>
 						Ok
