@@ -117,7 +117,9 @@ export class LoggedIn extends Component {
 		console.log("balanceCheck addressBalances", this.props.addressBalances);
 		for (var addressToCheck of Object.keys(this.props.addressBalances))
 			if (this.isValidAlterdotAddress(addressToCheck))
-				this.updateAddressBalance(addressToCheck, this.props.addressBalances[addressToCheck])
+				this.updateAddressBalance(addressToCheck, this.props.addressBalances[addressToCheck]);
+		
+		this.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses();
 	}
 	isValidAlterdotAddress = address => {
 		return (
@@ -148,7 +150,6 @@ export class LoggedIn extends Component {
 						if (component.props.addressBalances[addressToCheck] < constants.DUST_AMOUNT_IN_ADOT)
 							component.props.addressBalances[addressToCheck] = 0
 					}
-					component.updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses();
 				}
 			})
 			.catch(error => console.log(error));
@@ -165,15 +166,15 @@ export class LoggedIn extends Component {
 		var cachedText = '';
 		for (var key of Object.keys(this.props.addressBalances))
 			if (this.isValidAlterdotAddress(key)) {
-				var amount = this.props.addressBalances[key]
-				totalAmount += amount
-				cachedText += key + '|' + amount + '|'
+				var amount = this.props.addressBalances[key];
+				totalAmount += amount;
+				cachedText += key + '|' + amount + '|';
 			}
 		localStorage.setItem('addressBalances', cachedText);
 		return totalAmount.toFixed(8);
 	}
 	updateLocalStorageBalancesAndRefreshTotalAmountAndReceivingAddresses = () => {
-		var totalAmount = this.updateLocalStorageBalances()
+		var totalAmount = this.updateLocalStorageBalances();
 		if (this.props.totalBalance !== totalAmount) {
 			if (totalAmount > this.props.totalBalance)
 				NotificationManager.info(
@@ -201,7 +202,7 @@ export class LoggedIn extends Component {
 			}
 		}
 		var component = this;
-		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 10000)
+		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 20000)
 	}
 	fillTransactionFromId = (txId, txIndex) => {
 		if (!txId) return;
@@ -327,7 +328,6 @@ export class LoggedIn extends Component {
 						totalBalance={this.props.totalBalance}
 						privateSendBalance={this.getPrivateSendBalance()}
 						showNumber={this.props.showNumber}
-						getSign={this.getSign}
 						setMode={this.props.setMode}
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}

@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 
 const Panel = styled.div`
@@ -17,89 +17,92 @@ const Panel = styled.div`
 	}
 `
 
-export class Receive extends Component {
-	render = () => {
-		var addressLink =
-			'https://' +
-			this.props.explorer +
-			'/address/' +
-			this.props.lastUnusedAddress
-		return (
-			<Panel>
-				<h3>Latest address</h3>
-				<b>{this.props.lastUnusedAddress}</b>&nbsp;
-				<a
-					href={addressLink}
-					alt="Insight"
-					title="Insight"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					View
-				</a>
-				<br />
-				<img
-					src={
-						'//chart.googleapis.com/chart?cht=qr&chl=' +
-						this.props.lastUnusedAddress +
-						'&choe=UTF-8&chs=200x200&chld=L|0'
-					}
-					alt="QR Code"
-					title="QR Code"
-				/>
-				{this.props.reversedAddresses.length > 1 && (
-					<div>
-						<h5>Your other addresses</h5>
-						{this.props.reversedAddresses.slice(1).map(a => (
-							<div key={a} style={{ fontSize: '15px' }}>
-								<a
-									href={
-										'https://' +
-										this.props.explorer +
-										'/address/' +
-										a
-									}
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									{a}
-								</a>
-								<div
-									style={{
-										float: 'right',
-										color:
-											this.props.addressBalances && this.props.addressBalances[a] === 0.0100001
-												? 'rgb(141, 0, 228)'
-												: 'black',
-									}}
-								>
-									{this.props.showAlterdotNumber(
-										this.props.addressBalances && this.props.addressBalances[a]
-									)}
-								</div>
-							</div>
-						))}
-					</div>
-				)}
-				<br />
-				<button
-					style={{ float: 'right' }}
-					onClick={() =>
-						this.props.getUnusedAddress()
-					}
-				>
-					New Address
-				</button>
-				<button
-					style={{ float: 'right', marginRight: '10px' }}
+export function Receive(props) {
+	const [addressLink, setAddressLink] = useState(() => getAddressExplorerLink(props.explorer, props.lastUnusedAddress));
 
-					onClick={() =>
-						this.props.scanWalletAddresses(10)
-					}
-				>
-					Scan Wallet
-				</button>
-			</Panel>
-		)
-	}
+	function getAddressExplorerLink(explorer, address) {
+		return `https://${explorer}/address/'${address}`;
+	};
+
+	useEffect(() => {
+		setAddressLink(getAddressExplorerLink(props.explorer, props.lastUnusedAddress));
+	}, [props.explorer, props.lastUnusedAddress]);
+
+	return (
+		<Panel>
+			<h3>Latest address</h3>
+			<b>{props.lastUnusedAddress}</b>&nbsp;
+			<a
+				href={addressLink}
+				alt="Insight"
+				title="Insight"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				View
+			</a>
+			<br />
+			<img
+				src={
+					'//chart.googleapis.com/chart?cht=qr&chl=' +
+					props.lastUnusedAddress +
+					'&choe=UTF-8&chs=200x200&chld=L|0'
+				}
+				alt="QR Code"
+				title="QR Code"
+			/>
+			{props.reversedAddresses.length > 1 && (
+				<div>
+					<h5>Your other addresses</h5>
+					{props.reversedAddresses.slice(1).map(a => (
+						<div key={a} style={{ fontSize: '15px' }}>
+							<a
+								href={
+									'https://' +
+									props.explorer +
+									'/address/' +
+									a
+								}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								{a}
+							</a>
+							<div
+								style={{
+									float: 'right',
+									color:
+										props.addressBalances && props.addressBalances[a] === 0.0100001
+											? 'rgb(141, 0, 228)'
+											: 'black',
+								}}
+							>
+								{props.showAlterdotNumber(
+									props.addressBalances && props.addressBalances[a]
+								)}
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+			<br />
+			<button
+				style={{ float: 'right' }}
+				onClick={() =>
+					props.getUnusedAddress()
+				}
+			>
+				New Address
+			</button>
+			<button
+				style={{ float: 'right', marginRight: '10px' }}
+
+				onClick={() =>
+					props.scanWalletAddresses(10)
+				}
+			>
+				Scan Wallet
+			</button>
+		</Panel>
+	)
 }

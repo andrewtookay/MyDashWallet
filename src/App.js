@@ -100,14 +100,15 @@ const Loader = styled.div`
 
 export default class App extends Component {
 	constructor(props) {
-		super(props)
-		var lastLoginTime = localStorage.getItem('lastLoginTime')
-		var encryptedPasswordHash = localStorage.getItem('encryptedPasswordHash')
-		var hdSeedE = localStorage.getItem('hdSeedE')
-		var totalBalance = localStorage.getItem('totalBalance')
-		var addresses = localStorage.getItem('addresses')
-		var yesterday = new Date()
-		yesterday.setDate(yesterday.getDate() - 1)
+		super(props);
+		var lastLoginTime = localStorage.getItem('lastLoginTime');
+		var encryptedPasswordHash = localStorage.getItem('encryptedPasswordHash');
+		var hdSeedE = localStorage.getItem('hdSeedE');
+		var totalBalance = localStorage.getItem('totalBalance');
+		var addresses = localStorage.getItem('addresses');
+
+		var yesterday = new Date();
+		yesterday.setDate(yesterday.getDate() - 1);
 		// Max. keep cache 24 hours!
 		if (
 			lastLoginTime &&
@@ -130,7 +131,7 @@ export default class App extends Component {
 				mode: this.getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
 				explorer: 'insight.alterdot.network',
-			}
+			};
 		else
 			this.state = {
 				priceUsd: 0.02,
@@ -139,17 +140,19 @@ export default class App extends Component {
 				priceBtc: 0.00000040,
 				totalBalance: 0,
 				addresses: [],
-				hdSeedE: hdSeedE, //allow login again from stored encrypted seed, password is unknown and must match hash
+				hdSeedE: hdSeedE, // allows login from stored encrypted seed, password is unknown so it must match the hash
 				mode: this.getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
 				explorer: 'insight.alterdot.network',
-			}
+			};
+		
 		window.onpopstate = () => {
-			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl())
-		}
+			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl());
+		};
 		window.onpushstate = () => {
-			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl())
-		}
+			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl());
+		};
+		
 		/*will happen for too many users with adblockers on
 		fetch('https://api.coinmarketcap.com/v1/ticker/dash?convert=EUR')
 			.then(response => response.json())
@@ -184,24 +187,11 @@ export default class App extends Component {
 		ReactGA.pageview('/')
 	}
 	getModeFromUrl = () => {
-		/*window.location.href.endsWith('mix')
-			? 'mix'
-			: window.location.href.endsWith('tip') ||
-			  window.location.href.endsWith('tipping') ||
-			  window.location.href.endsWith('Tipping')
-			? 'tip'
-			: window.location.href.includes('chat')
-			? 'chat'
-			: window.location.href.endsWith('stats') || window.location.href.endsWith('statistics')
-			? 'stats'
-			: this first half is disabled*/
 		return window.location.href.endsWith('domains')
 			? 'domains'
 			: window.location.href.endsWith('help') || window.location.href.includes('about')
 			? 'help'
-			//: window.location.href.endsWith('scripthack')
-			//? 'scripthack'
-			: ''
+			: '';
 	}
 	setMode = newMode => {
 		if (this.state.mode === newMode) return
@@ -346,35 +336,46 @@ export default class App extends Component {
 		localStorage.setItem('addresses', addresses.join(' '))
 	}
 	showNumber = (amount, decimals) => {
-		var result
+		var oldResult;
+		var powerOf10 = 10 ** decimals;
+		var result = parseFloat(Math.round(amount * powerOf10) / powerOf10).toFixed(decimals);
+
 		if (decimals === 3) {
-			result = parseFloat(Math.round(amount * 1000) / 1000).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 1000) / 1000).toFixed(decimals)
 		} else if (decimals === 4) {
-			result = parseFloat(Math.round(amount * 10000) / 10000).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 10000) / 10000).toFixed(decimals)
 			// If we have more than 1 leading digits before the . remove the last digit after the dot
-			if (result.length > 6 && amount > 0) result = result.substring(0, result.length - 1)
+			if (oldResult.length > 6 && amount > 0) oldResult = oldResult.substring(0, oldResult.length - 1)
 		} else if (decimals === 5) {
-			result = parseFloat(Math.round(amount * 100000) / 100000).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 100000) / 100000).toFixed(decimals)
 			// If we have more than 1 leading digits before the . remove the last digit after the dot
-			if (result.length > 7 && amount > 0) result = result.substring(0, result.length - 1)
+			if (oldResult.length > 7 && amount > 0) oldResult = oldResult.substring(0, oldResult.length - 1)
 		} else if (decimals === 6)
-			result = parseFloat(Math.round(amount * 1000000) / 1000000).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 1000000) / 1000000).toFixed(decimals)
 		else if (decimals === 7)
-			result = parseFloat(Math.round(amount * 10000000) / 10000000).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 10000000) / 10000000).toFixed(decimals)
 		else if (decimals === 8)
-			result = parseFloat(Math.round(amount * 100000000) / 100000000).toFixed(decimals)
-		else result = parseFloat(amount).toFixed(decimals)
+			oldResult = parseFloat(Math.round(amount * 100000000) / 100000000).toFixed(decimals)
+		else oldResult = parseFloat(amount).toFixed(decimals)
+		
+		if (result !== oldResult)
+			console.log("showNumber ERROR, new result: ", result, "old result: ", oldResult);
+
 		// Always cut off the last bunch of zeros (except if we requested 2 decimals for currencies)
-		if (decimals > 2)
+		if (decimals > 2) {
 			for (var i = 0; i < 9; i++) {
 				var isDot = result.endsWith('.')
 				if (result.endsWith('0') || isDot) {
 					result = result.substring(0, result.length - 1)
-					if (isDot) break
-				} else break
+					if (isDot) break;
+				} else break;
 			}
-		if (result === '' || isNaN(result)) return 0
-		return result
+		}
+
+		if (result === '' || isNaN(result))
+			return 0;
+
+		return result;
 	}
 	selectExplorer = change => {
 		console.log('Selected explorer: ' + change.value)

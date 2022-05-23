@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 
 const Panel = styled.div`
@@ -18,31 +18,9 @@ const Panel = styled.div`
 	height: 42%;
 `
 
-export class Transactions extends Component {
-	render = () => {
-		return (
-			<Panel>
-				<div className="box-title">
-					<h3>Transaction History</h3>
-				</div>
-				<div id="tx-table">
-					<div className="tx-row">
-						<div className="colTx">Transaction</div>
-						<div className="colDate">Date</div>
-						<div className="colAlterdot">ADOT</div>
-						<div className="colFiat">{this.props.selectedCurrency}</div>
-						<div className="colConfirmations">Confirmations</div>
-					</div>
-				</div>
-				{this.renderAllTransactions(
-					this.props.transactions.slice(0, 50).sort((a, b) => b.time - a.time),
-					true
-				)}
-			</Panel>
-		)
-	}
-	renderAllTransactions = (transactions, fullSize) => {
-		var twoMinutesAgo = new Date(new Date().getTime() + 2 * 60000)
+export function Transactions(props) {
+	const renderAllTransactions = (transactions, fullSize) => {
+		var twoMinutesAgo = new Date(new Date().getTime() + 2 * 60000);
 		console.log(transactions);
 		return (
 			<div id="transactions">
@@ -57,14 +35,7 @@ export class Transactions extends Component {
 								<div className="tx_link">
 									<a
 										className="short-link"
-										href={
-											'https://' +
-											this.props.explorer +
-											(this.props.explorer === 'blockchair.com/dash'
-												? '/transaction/'
-												: '/tx/') +
-											tx.id
-										}
+										href={`https://${props.explorer}/tx/${tx.id}`}
 										target="_blank"
 										rel="noopener noreferrer"
 									>
@@ -78,17 +49,17 @@ export class Transactions extends Component {
 									{tx.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 								</span>
 							</div>
-							<div className="colAlterdot" title={this.props.showAlterdotNumber(tx.amountChange)}>
+							<div className="colAlterdot" title={props.showAlterdotNumber(tx.amountChange)}>
 								{(tx.amountChange > 0 ? '+' : '') +
-									this.props.showNumber(tx.amountChange, fullSize ? 8 : 5)}
+									props.showNumber(tx.amountChange, fullSize ? 8 : 5)}
 							</div>
 							<div className="colFiat">
 								{(tx.amountChange > 0 ? '+' : '') +
-									(tx.amountChange * this.props.getSelectedCurrencyAlterdotPrice()).toFixed(2)}
+									(tx.amountChange * props.getSelectedCurrencyAlterdotPrice()).toFixed(2)}
 							</div>
 							<div className="colConfirmations">
 								{tx.confirmations +
-									(this.props.showNumber(tx.amountChange, fullSize ? 8 : 5) === '0'
+									(props.showNumber(tx.amountChange, fullSize ? 8 : 5) === '0'
 										? ' PrivateSend'
 										: tx.txlock
 										? ' InstantSend'
@@ -106,5 +77,26 @@ export class Transactions extends Component {
 				)}
 			</div>
 		)
-	}
+	};
+
+	return (
+		<Panel>
+			<div className="box-title">
+				<h3>Transaction History</h3>
+			</div>
+			<div id="tx-table">
+				<div className="tx-row">
+					<div className="colTx">Transaction</div>
+					<div className="colDate">Date</div>
+					<div className="colAlterdot">ADOT</div>
+					<div className="colFiat">{props.selectedCurrency}</div>
+					<div className="colConfirmations">Confirmations</div>
+				</div>
+			</div>
+			{renderAllTransactions(
+				props.transactions.slice(0, 50).sort((a, b) => b.time - a.time),
+				true
+			)}
+		</Panel>
+	);
 }
