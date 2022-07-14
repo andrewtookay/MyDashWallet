@@ -14,7 +14,7 @@ import 'react-dropdown/style.css'
 
 const Container = styled.div`
 	transition: all linear 0.2s;
-	width: ${props => (props.collapsed ? '44px' : '18%')};
+	width: ${props => (props.collapsed ? '65px' : '18%')};
 	height: 100%;
 	border-radius: 40px;
 	min-height: ${props => (props.collapsed ? '800px' : '600px')};
@@ -44,20 +44,19 @@ const Container = styled.div`
 `
 const ToggleButton = styled.div`
 	font-size: 22px;
-	margin: 5px;
-	margin-left: 0px;
-	padding: 0 18px;
 	margin-top: 10px;
-	margin-bottom: 10px;
+	padding: 15px 20px;
 	cursor: pointer;
-	padding-left: 12px;
 	span {
 		font-size: 20px;
 		width: 100%;
 		position: relative;
 		font-weight: 500;
-		margin-left: 16px;
+		margin-left: 14px;
 		margin-top: -5px;
+	}
+	svg {
+		min-width: 24px;
 	}
 `
 const Logo = styled.div`
@@ -104,16 +103,15 @@ const MenuElements = styled.div`
 	}
 	ul li {
 		list-style: none;
-		padding: 15px 0 15px 10px;
+		padding: 15px 20px;
 	}
 	ul li a svg {
 		min-width: 24px;
-		margin-right: 15px;
 	}
 	ul li a span {
 		display: ${props => (props.collapsed ? 'none' : 'inline')};
 		font-size: 20px;
-		width: 100%;
+		margin-left: 14px;
 		position: relative;
 		font-weight: 500;
 	}
@@ -124,15 +122,20 @@ const MenuFooter = styled.div`
 	position: absolute;
 	bottom: 0;
 	padding: 5px;
+	width: 96%;
+	div {
+		display: flex;
+		justify-content: center;
+		padding: 4px 0px;
+	}
 `
 const SocialMediaIcon = styled.div`
-	float: left;
 	background: ${props => "url('" + props.image + "')"};
 	width: 30px;
 	height: 30px;
 	-ms-background-size: 30px 30px;
 	background-size: 30px 30px;
-	margin: 6px 2px;
+	margin: 0px 4px;
 	:hover {
 		background: ${props => "url('" + props.hoverImage + "')"};
 		width: 30px;
@@ -253,41 +256,23 @@ export class Menu extends Component {
 				</MenuElements>
 				<Illustration collapsed={collapsed} />
 				<MenuFooter collapsed={collapsed}>
-					<center>
-						<a
-							href="https://github.com/DeltaEngine/MyDashWallet"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
+					<div>
+						<a href="https://discord.com/invite/86eTp6m7p9" target="_blank" rel="noopener noreferrer">
 							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Github_Default.png"
-								hoverImage="/images/SocialMediaIcon_Github_Hover.png"
-								title="Open Source Code on GitHub"
+								image="/images/SocialMediaIcon_Discord_Default.png"
+								hoverImage="/images/SocialMediaIcon_Discord_Hover.png"
+								title="Alterdot Community on Discord"
 							/>
 						</a>
-						<a href="https://twitter.com/MyDashWallet" target="_blank" rel="noopener noreferrer">
+						<a href="https://twitter.com/AlterdotNetwork" target="_blank" rel="noopener noreferrer">
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Twitter_Default.png"
 								hoverImage="/images/SocialMediaIcon_Twitter_Hover.png"
 								title="Twitter"
 							/>
 						</a>
-						<a
-							href="https://discordapp.com/invite/9z8zX5j"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Discord_Default.png"
-								hoverImage="/images/SocialMediaIcon_Discord_Hover.png"
-								title="Dash Nation on Discord"
-							/>
-						</a>
-						<a
-							href="https://www.reddit.com/user/mydashwallet/comments/"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
+						{/*
+						<a href="https://www.reddit.com/user/mydashwallet/comments/" target="_blank" rel="noopener noreferrer" >
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Reddit_Default.png"
 								hoverImage="/images/SocialMediaIcon_Reddit_Hover.png"
@@ -301,14 +286,22 @@ export class Menu extends Component {
 								title="MyDashWallet on Telegram"
 							/>
 						</a>
-						<a href="mailto:Support@MyDashWallet.org">
+						*/}
+						<a href="https://github.com/Alterdot/web-wallet" target="_blank" rel="noopener noreferrer">
+							<SocialMediaIcon
+								image="/images/SocialMediaIcon_Github_Default.png"
+								hoverImage="/images/SocialMediaIcon_Github_Hover.png"
+								title="Open Source Code on GitHub"
+							/>
+						</a>
+						<a href="mailto:a.alterdot@gmail.com">
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Mail_Default.png"
 								hoverImage="/images/SocialMediaIcon_Mail_Hover.png"
 								title="Contact Support"
 							/>
 						</a>
-					</center>
+					</div>
 					<FooterText collapsed={collapsed}>
 						&copy; 2022 Alterdot (ADOT) Developers
 					</FooterText>

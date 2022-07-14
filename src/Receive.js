@@ -18,20 +18,33 @@ const Panel = styled.div`
 `
 
 export function Receive(props) {
-	const [addressLink, setAddressLink] = useState(() => getAddressExplorerLink(props.explorer, props.lastUnusedAddress));
+	const [addressLink, setAddressLink] = useState(() => getAddressExplorerLink(props.explorer, props.lastAddress));
 
 	function getAddressExplorerLink(explorer, address) {
-		return `https://${explorer}/address/'${address}`;
+		return `https://${explorer}/address/${address}`;
 	};
 
 	useEffect(() => {
-		setAddressLink(getAddressExplorerLink(props.explorer, props.lastUnusedAddress));
-	}, [props.explorer, props.lastUnusedAddress]);
+		setAddressLink(getAddressExplorerLink(props.explorer, props.lastAddress));
+	}, [props.explorer, props.lastAddress]);
 
 	return (
 		<Panel>
 			<h3>Latest address</h3>
-			<b>{props.lastUnusedAddress}</b>&nbsp;
+			<b>{props.lastAddress}</b>&nbsp;
+			<div
+				style={{
+					float: 'right',
+					color:
+						props.addressBalances && props.addressBalances[props.lastAddress] === 0.0100001
+							? 'rgb(141, 0, 228)'
+							: 'black',
+				}}
+			>
+				{props.showAlterdotNumber(
+					props.addressBalances && props.addressBalances[props.lastAddress] // TODO_ADOT_MEDIUM review this
+				)}
+			</div>
 			<a
 				href={addressLink}
 				alt="Insight"
@@ -42,10 +55,10 @@ export function Receive(props) {
 				View
 			</a>
 			<br />
-			<img
+			<img className="qr-code"
 				src={
 					'//chart.googleapis.com/chart?cht=qr&chl=' +
-					props.lastUnusedAddress +
+					props.lastAddress +
 					'&choe=UTF-8&chs=200x200&chld=L|0'
 				}
 				alt="QR Code"
