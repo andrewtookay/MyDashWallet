@@ -119,7 +119,9 @@ export function Send(props) {
 			// Try to figure out how many inputs we would need if we have multiple addresses
 			numberOfInputs = 0;
 			var amountToCheck = amount.amountADOT;
-			for (var address of Object.keys(props.addressBalances)) { // TODO_ADOT_MEDIUM this only takes into account the number of addresses, not actual inputs
+			// TODO_ADOT_HIGH this only takes into account the number of addresses, not actual inputs
+			// use the addrs/utxo endpoint from the insight-api
+			for (var address of Object.keys(props.addressBalances)) {
 				var amountToSend = props.addressBalances[address]
 				if (amountToSend > 0 && amountToCheck > 0.00000001) {
 					numberOfInputs++;
@@ -464,7 +466,7 @@ export function Send(props) {
 					<div className="send_step_form_otr step_1_otr">
 						<div className="input_box_otr clearfix">
 							<div className="input_box col_12 fl">
-								<label>Destination Address:</label>
+								<label>Destination Address</label>
 								<table style={{ width: '100%' }}>
 									<tbody>
 										<tr>
@@ -513,71 +515,69 @@ export function Send(props) {
 								)}
 							</div>
 							<br />
-							<div className="input_box col_6 fl dash_currency">
-								<label>How much ADOT do you want to send?</label>
-								<div className="full-line">
-									<input
-										style={{ marginRight: '8px' }}
-										type="number"
-										value={amount.amountADOT}
-										onChange={e => {
-											var newValue = parseFloat(e.target.value);
-											if (newValue < 0 || isNaN(newValue)) newValue = 0;
-											setAmount({
-												amountADOT: newValue,
-												amountUSD: props.showNumber(
-													newValue * props.getSelectedCurrencyAlterdotPrice(), 2
-												)
-											});
-										}}
-									/>
-									<button
-										style={{ width: '80px' }}
-										onClick={() => {
-											setAmount({
-												amountADOT: props.totalBalance,
-												amountUSD: props.showNumber(
-													props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
-												)
-											});
-										}}
-									>
-										Max
-									</button>
+							<div className="full-row">
+								<div className="amount-box">
+									<label>Amount ADOT</label>
+									<div className="amount-line">
+										<input
+											type="number"
+											value={amount.amountADOT}
+											onChange={e => {
+												var newValue = parseFloat(e.target.value);
+												if (newValue < 0 || isNaN(newValue)) newValue = 0;
+												setAmount({
+													amountADOT: newValue,
+													amountUSD: props.showNumber(
+														newValue * props.getSelectedCurrencyAlterdotPrice(), 2
+													)
+												});
+											}}
+										/>
+										<button className="max-amount"
+											onClick={() => {
+												setAmount({
+													amountADOT: props.totalBalance,
+													amountUSD: props.showNumber(
+														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
+													)
+												});
+											}}
+										>
+											Max
+										</button>
+									</div>
 								</div>
-							</div>
-							<br />
-							<div className="input_box col_6 fl usd_currency">
-								<label>Amount {props.selectedCurrency}:</label>
-								<div className="full-line">
-									<input
-										style={{ marginRight: '8px' }}
-										type="number"
-										value={amount.amountUSD}
-										onChange={e => {
-											var newValue = parseFloat(e.target.value);
-											if (newValue < 0 || isNaN(newValue)) newValue = 0;
-											setAmount({
-												amountADOT: props.showNumber(
-													newValue / props.getSelectedCurrencyAlterdotPrice(), 5
-												),
-												amountUSD: newValue
-											});
-										}}
-									/>
-									<button
-										style={{ width: '80px' }}
-										onClick={() => {
-											setAmount({
-												amountADOT: props.totalBalance,
-												amountUSD: props.showNumber(
-													props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
-												)
-											});
-										}}
-									>
-										Max
-									</button>
+								<br />
+								<div className="amount-box">
+									<label>Amount {props.selectedCurrency}</label>
+									<div className="amount-line">
+										<input
+											type="number"
+											value={amount.amountUSD}
+											onChange={e => {
+												var newValue = parseFloat(e.target.value);
+												if (newValue < 0 || isNaN(newValue)) newValue = 0;
+												setAmount({
+													amountADOT: props.showNumber(
+														newValue / props.getSelectedCurrencyAlterdotPrice(), 5
+													),
+													amountUSD: newValue
+												});
+											}}
+										/>
+										<button className="max-amount"
+											onClick={() => {
+												setAmount({
+													amountADOT: props.totalBalance,
+													amountUSD: props.showNumber(
+														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
+													)
+												});
+											}}
+										>
+											Max
+										</button>
+									</div>
 								</div>
 							</div>
 							<br />
