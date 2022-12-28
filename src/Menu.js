@@ -43,7 +43,6 @@ const Container = styled.div`
 	}
 `;
 const ToggleButton = styled.div`
-	font-size: 22px;
 	margin-top: 10px;
 	padding: 15px 20px;
 	cursor: pointer;
@@ -55,9 +54,13 @@ const ToggleButton = styled.div`
 		margin-left: 14px;
 		margin-top: -5px;
 	}
+	display: flex;
+	align-items: center;
 	svg {
-		min-width: 24px;
+		width: 30px;
+		height: 34px;
 	}
+	justify-content: ${(props) => (props.collapsed ? 'center' : 'initial')};
 `;
 const Logo = styled.div`
 	display: ${(props) => (props.collapsed ? 'none' : 'block')};
@@ -105,6 +108,11 @@ const MenuElements = styled.div`
 		list-style: none;
 		padding: 15px 20px;
 	}
+	ul li a {
+		display: flex;
+		align-items: center;
+		justify-content: ${(props) => (props.collapsed ? 'center' : 'initial')};
+	}
 	ul li a svg {
 		min-width: 24px;
 	}
@@ -114,6 +122,10 @@ const MenuElements = styled.div`
 		margin-left: 14px;
 		position: relative;
 		font-weight: 500;
+	}
+	ul li svg {
+		width: 30px;
+		height: 30px;
 	}
 	margin-bottom: 40px;
 `;
@@ -187,7 +199,7 @@ export class Menu extends Component {
 		return (
 			<Container collapsed={collapsed} ref={(menu) => (this.menu = menu)}>
 				<Logo collapsed={collapsed} onClick={() => this.props.setMode('')} />
-				<ToggleButton onClick={this.toggleNavbar} alt="Toggle collapse menu">
+				<ToggleButton onClick={this.toggleNavbar} collapsed={collapsed} alt="Toggle collapse menu">
 					<FontAwesomeIcon icon={faBars} />
 					{!collapsed && <span>Menu</span>}
 				</ToggleButton>
@@ -195,7 +207,7 @@ export class Menu extends Component {
 					<ul className={this.state.collapsed && 'd-flex flex-column'}>
 						<li>
 							<Link to="/" onClick={() => this.props.setMode('')}>
-								<FontAwesomeIcon icon={faWallet} size="2x" />
+								<FontAwesomeIcon icon={faWallet} />
 								<span>{!this.props.isUnlocked ? 'Open ' : ''}Wallet</span>
 							</Link>
 						</li>
@@ -224,19 +236,19 @@ export class Menu extends Component {
 						</li>*/}
 						<li>
 							<Link to="/domains" onClick={() => this.props.setMode('domains')}>
-								<FontAwesomeIcon icon={faTags} size="2x" />
+								<FontAwesomeIcon icon={faTags} />
 								<span>Domains</span>
 							</Link>
 						</li>
 						<li>
 							<Link to="/settings" onClick={() => this.props.setMode('settings')}>
-								<FontAwesomeIcon icon={faCogs} size="2x" />
+								<FontAwesomeIcon icon={faCogs} />
 								<span>Settings</span>
 							</Link>
 						</li>
 						<li>
 							<Link to="/help" onClick={() => this.props.setMode('help')}>
-								<FontAwesomeIcon icon={faQuestion} size="2x" />
+								<FontAwesomeIcon icon={faQuestion} />
 								<span>Help</span>
 							</Link>
 						</li>
@@ -248,7 +260,7 @@ export class Menu extends Component {
 						</li>*/}
 						<li style={{ display: this.props.isUnlocked ? 'auto' : 'none' }}>
 							<Link to="/" onClick={() => this.props.onLogout()}>
-								<FontAwesomeIcon icon={faSignOutAlt} size="2x" />
+								<FontAwesomeIcon icon={faSignOutAlt} />
 								<span>Logout</span>
 							</Link>
 						</li>
