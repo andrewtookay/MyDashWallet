@@ -36,28 +36,36 @@ export class Wallet extends Component {
 			component.setState({ skipEmptyAddresses: false });
 		}, 70000);
 	}
+
 	componentDidMount() {
 		var component = this;
 		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 20000);
 
 		if (this.props.totalBalance * this.props.priceUsd > 100)
 			this.hdWalletTooMuchBalanceWarning.show();
+
+		this.fillTransactions(Object.keys(this.props.addressBalances));
 	}
+
 	componentDidUpdate(prevProps) {
 		let sizeAddressBalances = Object.keys(this.props.addressBalances).length;
-		if (sizeAddressBalances !== Object.keys(prevProps.addressBalances).length) {
+		let prevSizeAddressBalances = Object.keys(prevProps.addressBalances).length;
+
+		if (sizeAddressBalances !== prevSizeAddressBalances) {
 			this.fillTransactions(Object.keys(this.props.addressBalances));
 			this.setState({
 				lastAddress: Object.keys(this.props.addressBalances)[sizeAddressBalances - 1],
 			});
 		}
 	}
+
 	componentWillUnmount() {
 		clearInterval(this.skipInitialTxInterval);
 		clearInterval(this.skipEmptyAddressesInterval);
 		clearInterval(this.updateBalanceInterval);
 		if (this.updatingBalanceController) this.updatingBalanceController.abort();
 	}
+
 	addTransaction = (tx) => {
 		// If we already got this tx, there is nothing we need to do, new ones are just added on top
 		for (var existingTx of this.state.transactions) if (existingTx.id === tx.id) return;
@@ -75,10 +83,13 @@ export class Wallet extends Component {
 			);
 		}
 	};
+
 	showAlterdotNumber = (amount) => {
 		return this.props.showNumber(amount, 8) + ' ADOT';
 	};
+
 	fillTransactionFromAddress = (address) => {
+		// TODO_ADOT_HIGH get transactions from all addresses in one request, can be paginated
 		fetch('https://' + this.props.explorer + '/insight-api/txs/?address=' + address, {
 			mode: 'cors',
 			cache: 'no-cache',
@@ -115,7 +126,6 @@ export class Wallet extends Component {
 		return Object.keys(this.props.addressBalances).includes(addressToCheck);
 	};
 	fillTransactions = (addresses) => {
-		console.log('fillTransactions', addresses);
 		for (var address of addresses) this.fillTransactionFromAddress(address);
 	};
 	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got

@@ -170,13 +170,9 @@ export default class App extends Component {
 	};
 	// TODO_ADOT_LOW might become expensive for many addresses with a lot of activity
 	updateAddressBalances = (newAddressBalances) => {
-		console.log('newAddressBalances', newAddressBalances);
-		console.log('old totalBalance', this.state.totalBalance);
-		console.log('old addressBalances', this.state.addressBalances);
 		this.setState((prevState) => {
 			let addressBalances = Object.assign({}, prevState.addressBalances);
 			let totalBalance = prevState.totalBalance;
-			console.log('prevState totalBalance', prevState.totalBalance);
 			// TODO_ADOT_MEDIUM check for negative values
 			for (var address of Object.keys(newAddressBalances)) {
 				if (typeof addressBalances[address] === 'number' && !isNaN(addressBalances[address]))
@@ -184,20 +180,11 @@ export default class App extends Component {
 				else totalBalance = totalBalance + newAddressBalances[address];
 				addressBalances[address] = newAddressBalances[address];
 			}
-			console.log('inner totalBalance', totalBalance);
-			console.log('inner typeof totalBalance', typeof totalBalance);
 			totalBalance = parseFloat(totalBalance.toFixed(8));
-			console.log('inner totalBalance', totalBalance);
-			console.log('inner typeof totalBalance', typeof totalBalance);
 			return { addressBalances: addressBalances, totalBalance: totalBalance };
 		});
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		this.updateLocalStorageAddressesAndTotalBalance(); // TODO_ADOT_HIGH do on interval
-		var component = this;
-		setTimeout(() => {
-			console.log('new totalBalance', component.state.totalBalance);
-			console.log('new addressBalances', component.state.addressBalances);
-		}, 1000);
 	};
 	isValidAlterdotAddress = (address) => {
 		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
@@ -390,20 +377,6 @@ export default class App extends Component {
 		this.setState({ explorer: change.value });
 	};
 	render() {
-		var url = window.location.href.toLowerCase();
-		if (url.includes('/mixing') || url.includes('/redeem') || url.includes('/?redeem')) {
-			if (url.includes('https://mydashwallet.org'))
-				window.location = window.location.href.replace(
-					'https://mydashwallet.org',
-					'https://old.mydashwallet.org'
-				);
-			else if (url.includes('http://localhost:3000'))
-				window.location = window.location.href.replace(
-					'http://localhost:3000',
-					'https://old.mydashwallet.org'
-				);
-			return <div />;
-		}
 		return (
 			<PageContainer>
 				<Menu
@@ -463,27 +436,8 @@ export default class App extends Component {
 							onLogout={this.logout}
 						/>
 					)}
-					{this.state.loading && <Loader>ADOT</Loader>}
+					{this.state.loading && <Loader>Alterdot</Loader>}
 				</MainContainer>
-				{/*
-				<AlterdotPricePanel>
-					<div title="Data from CoinMarketCap.com">
-						<b>1 ADOT</b>
-						<br />${this.showNumber(this.state.priceUsd, 2)}
-						<br />€{this.showNumber(this.state.priceEur, 2)}
-						<br />
-						{window.innerWidth > 768 && <span>{this.showNumber(this.state.priceBtc, 4)} BTC</span>}
-					</div>
-					{window.innerWidth > 768 && (
-						<div title="1 mADOT = 0.001 ADOT. Data from CoinMarketCap.com">
-							<b>1 mADOT</b>
-							<br />${this.showNumber(this.state.priceUsd / 1000.0, 2)}
-							<br />€{this.showNumber(this.state.priceEur / 1000.0, 2)}
-							<br />
-							Tx:${this.showNumber(this.state.priceUsd * 0.00002260, 5)}
-						</div>
-					)}
-				</AlterdotPricePanel>*/}
 			</PageContainer>
 		);
 	}

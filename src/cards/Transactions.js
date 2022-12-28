@@ -20,7 +20,7 @@ const Panel = styled.div`
 export function Transactions(props) {
 	const renderAllTransactions = (transactions, fullSize) => {
 		var twoMinutesAgo = new Date(new Date().getTime() + 2 * 60000);
-		console.log(transactions);
+
 		return (
 			<div id="transactions">
 				{transactions.map((tx) => {
