@@ -1,93 +1,48 @@
-import React, { Component } from 'react'
-import styled from 'styled-components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-	faMoneyBill,
-	faDollarSign,
-	faEuroSign,
-	faPoundSign
-} from '@fortawesome/free-solid-svg-icons'
+import React, { Component } from 'react';
+import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDollarSign, faEuroSign, faPoundSign, faCoins } from '@fortawesome/free-solid-svg-icons';
 
 const BalancesPanel = styled.div`
 	display: flex;
 	margin-bottom: 20px;
-`
+`;
+
 const BalanceBox = styled.div`
-	width: 49%;
+	display: flex;
 	margin-right: 2%;
-	position: relative;
 	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
 	backdrop-filter: blur(4px);
 	z-index: 2;
 	padding: 15px;
 	border-radius: 15px;
 	box-shadow: 3px 3px 3px #9f434e;
-`
-const BalanceBoxTitle = styled.div`
-	font-size: 18px;
-	line-height: 30px;
-	color: #012060;
-	display: block;
-	font-weight: 500;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	@media screen and (max-width: 767px) {
-		font-size: 14px;
-		line-height: 20px;
-	}
-`
+`;
 const BalanceBoxValue = styled.div`
-	padding-top: 20px;
-	font-size: 37px;
-	line-height: 30px;
+	font-size: 36px;
+	line-height: 36px;
 	color: #f1592a;
-	display: block;
-	font-weight: 500;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: clip;
-	position: relative;
 	@media screen and (max-width: 767px) {
-		padding-top: 6px;
-		line-height: 20px;
+		line-height: 22px;
 		font-size: 22px;
 	}
-`
+`;
+
 const Icon = styled(FontAwesomeIcon)`
-	font-size: 40px;
+	font-size: 36px;
 	color: lightgray;
-	position: absolute;
-	bottom: 10px;
-	right: 20px;
-	@media screen and (max-width: 767px) {
-		font-size: 24px;
-		bottom: 15px;
-		right: 10px;
-	}
-`
+	margin-left: 10px;
+`;
 
 export class Balances extends Component {
 	render = () => {
 		return (
 			<BalancesPanel>
-				<BalanceBox title="Your ADOT Balance">
-					<BalanceBoxTitle>ADOT Total Balance</BalanceBoxTitle>
-					<Icon icon={faMoneyBill} />
+				<BalanceBox title="Your total ADOT balance">
+					{/* <BalanceBoxTitle>ADOT Total Balance</BalanceBoxTitle> */}
 					<BalanceBoxValue>{this.props.showNumber(this.props.totalBalance, 8)}</BalanceBoxValue>
+					<Icon icon={faCoins} />
 				</BalanceBox>
-				{/*<BalanceBox title="PrivateSend Balance">
-					{window.innerWidth > 768 //unused atm: && (
-					// <button style={{ float: 'right' }} onClick={() => this.props.setMode('mix')}>
-					// 	Mix
-					// </button>)
-					}
-					<BalanceBoxTitle>PrivateSend Balance</BalanceBoxTitle>
-					<Icon icon={faLock} />
-					<BalanceBoxValue style={{ color: '#8d00e4' }}>
-						{this.props.showNumber(this.props.privateSendBalance, 8)}
-					</BalanceBoxValue>
-				</BalanceBox>*/}
 				<BalanceBox
 					style={{ marginRight: '0' }}
 					title={
@@ -97,17 +52,12 @@ export class Balances extends Component {
 						this.props.selectedCurrency
 					}
 				>
-					<BalanceBoxTitle>
-						<select
-							value={this.props.selectedCurrency}
-							onChange={e => this.props.setSelectedCurrency(e.target.value)}
-						>
-							<option value="USD">USD</option>
-							<option value="EUR">EUR</option>
-							<option value="GBP">GBP</option>
-						</select>{' '}
-						Balance
-					</BalanceBoxTitle>
+					<BalanceBoxValue style={{ color: '#d03c48' }}>
+						{this.props.showNumber(
+							this.props.totalBalance * this.props.getSelectedCurrencyAlterdotPrice(),
+							2
+						)}
+					</BalanceBoxValue>
 					<Icon
 						icon={
 							this.props.selectedCurrency === 'EUR'
@@ -117,14 +67,8 @@ export class Balances extends Component {
 								: faDollarSign
 						}
 					/>
-					<BalanceBoxValue style={{ color: '#8de400' }}>
-						{this.props.showNumber(
-							this.props.totalBalance * this.props.getSelectedCurrencyAlterdotPrice(),
-							2
-						)}
-					</BalanceBoxValue>
 				</BalanceBox>
 			</BalancesPanel>
-		)
-	}
+		);
+	};
 }
