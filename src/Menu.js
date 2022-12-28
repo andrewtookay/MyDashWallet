@@ -1,7 +1,7 @@
-﻿import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
-import styled from 'styled-components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+﻿import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faBars,
 	faWallet,
@@ -9,29 +9,29 @@ import {
 	faTags,
 	faCogs,
 	faSignOutAlt,
-} from '@fortawesome/free-solid-svg-icons'
-import 'react-dropdown/style.css'
+} from '@fortawesome/free-solid-svg-icons';
+import 'react-dropdown/style.css';
 
 const Container = styled.div`
 	transition: all linear 0.2s;
-	width: ${props => (props.collapsed ? '65px' : '18%')};
+	width: ${(props) => (props.collapsed ? '96px' : '18%')};
 	height: 100%;
 	border-radius: 40px;
-	min-height: ${props => (props.collapsed ? '800px' : '600px')};
+	min-height: ${(props) => (props.collapsed ? '800px' : '600px')};
 	background-color: #621b57;
-	background-image: linear-gradient(#621b57,#621b32);
+	background-image: linear-gradient(#621b57, #621b32);
 	position: relative;
 	z-index: 2;
 	float: none;
 	display: inline-block;
 	vertical-align: top;
 	color: white;
-	padding-left: ${props => (props.collapsed ? '0' : '5px')};
-	padding-right: ${props => (props.collapsed ? '0' : '5px')};
+	padding-left: ${(props) => (props.collapsed ? '0' : '5px')};
+	padding-right: ${(props) => (props.collapsed ? '0' : '5px')};
 	@media screen and (max-width: 767px) {
-		width: ${props => (props.collapsed ? '44px' : '100%')};
+		width: ${(props) => (props.collapsed ? '44px' : '100%')};
 		position: relative;
-		height: ${props => (props.collapsed ? '100%' : 'auto')};
+		height: ${(props) => (props.collapsed ? '100%' : 'auto')};
 	}
 	a {
 		color: white;
@@ -41,7 +41,7 @@ const Container = styled.div`
 		color: #f6a803;
 		text-decoration: none;
 	}
-`
+`;
 const ToggleButton = styled.div`
 	font-size: 22px;
 	margin-top: 10px;
@@ -58,9 +58,9 @@ const ToggleButton = styled.div`
 	svg {
 		min-width: 24px;
 	}
-`
+`;
 const Logo = styled.div`
-	display: ${props => (props.collapsed ? 'none' : 'block')};
+	display: ${(props) => (props.collapsed ? 'none' : 'block')};
 	@media screen and (max-width: 767px) {
 		display: none;
 	}
@@ -75,9 +75,9 @@ const Logo = styled.div`
 	margin-bottom: 20px;
 	margin-left: auto;
 	margin-right: auto;
-`
+`;
 const Illustration = styled.div`
-	display: ${props => (props.collapsed ? 'none' : 'block')};
+	display: ${(props) => (props.collapsed ? 'none' : 'block')};
 	@media screen and (max-width: 767px) {
 		display: none;
 	}
@@ -96,7 +96,7 @@ const Illustration = styled.div`
 	margin-bottom: 0;
 	margin-left: auto;
 	margin-right: auto;
-`
+`;
 const MenuElements = styled.div`
 	ul {
 		padding: 0;
@@ -109,16 +109,16 @@ const MenuElements = styled.div`
 		min-width: 24px;
 	}
 	ul li a span {
-		display: ${props => (props.collapsed ? 'none' : 'inline')};
+		display: ${(props) => (props.collapsed ? 'none' : 'inline')};
 		font-size: 20px;
 		margin-left: 14px;
 		position: relative;
 		font-weight: 500;
 	}
 	margin-bottom: 40px;
-`
+`;
 const MenuFooter = styled.div`
-	display: ${props => (props.collapsed ? 'none' : 'block')};
+	display: ${(props) => (props.collapsed ? 'none' : 'block')};
 	position: absolute;
 	bottom: 0;
 	padding: 5px;
@@ -128,16 +128,16 @@ const MenuFooter = styled.div`
 		justify-content: center;
 		padding: 4px 0px;
 	}
-`
+`;
 const SocialMediaIcon = styled.div`
-	background: ${props => "url('" + props.image + "')"};
+	background: ${(props) => "url('" + props.image + "')"};
 	width: 30px;
 	height: 30px;
 	-ms-background-size: 30px 30px;
 	background-size: 30px 30px;
 	margin: 0px 4px;
 	:hover {
-		background: ${props => "url('" + props.hoverImage + "')"};
+		background: ${(props) => "url('" + props.hoverImage + "')"};
 		width: 30px;
 		height: 30px;
 		-ms-background-size: 30px 30px;
@@ -156,46 +156,46 @@ const SocialMediaIcon = styled.div`
 			background-size: 24px 24px;
 		}
 	}
-`
+`;
 const FooterText = styled.div`
 	clear: both;
-	display: ${props => (props.collapsed ? 'none' : 'block')};
+	display: ${(props) => (props.collapsed ? 'none' : 'block')};
 	font-size: 11px;
 	text-align: center;
 	margin: auto;
 	padding-right: 10px;
-`
+`;
 
 export class Menu extends Component {
 	constructor(props) {
-		super(props)
-		this.state = { collapsed: window.innerWidth < 768 }
+		super(props);
+		this.state = { collapsed: window.innerWidth < 768 };
 	}
 	componentWillMount() {
-		document.addEventListener('mousedown', this.handleClick, false)
+		document.addEventListener('mousedown', this.handleClick, false);
 	}
 	componentWillUnmount() {
-		document.removeEventListener('mousedown', this.handleClick, false)
+		document.removeEventListener('mousedown', this.handleClick, false);
 	}
 	toggleNavbar = () => {
-		this.props.setCollapsed(!this.state.collapsed)
-		this.setState({ collapsed: !this.state.collapsed })
-	}
+		this.props.setCollapsed(!this.state.collapsed);
+		this.setState({ collapsed: !this.state.collapsed });
+	};
 
 	render() {
-		var collapsed = this.state && this.state.collapsed
+		var collapsed = this.state && this.state.collapsed;
 		return (
-			<Container collapsed={collapsed} ref={menu => (this.menu = menu)}>
+			<Container collapsed={collapsed} ref={(menu) => (this.menu = menu)}>
 				<Logo collapsed={collapsed} onClick={() => this.props.setMode('')} />
 				<ToggleButton onClick={this.toggleNavbar} alt="Toggle collapse menu">
 					<FontAwesomeIcon icon={faBars} />
 					{!collapsed && <span>Menu</span>}
 				</ToggleButton>
 				<MenuElements collapsed={collapsed}>
-					<ul>
+					<ul className={this.state.collapsed && 'd-flex flex-column'}>
 						<li>
 							<Link to="/" onClick={() => this.props.setMode('')}>
-								<FontAwesomeIcon icon={faWallet} />
+								<FontAwesomeIcon icon={faWallet} size="2x" />
 								<span>{!this.props.isUnlocked ? 'Open ' : ''}Wallet</span>
 							</Link>
 						</li>
@@ -224,19 +224,19 @@ export class Menu extends Component {
 						</li>*/}
 						<li>
 							<Link to="/domains" onClick={() => this.props.setMode('domains')}>
-								<FontAwesomeIcon icon={faTags} />
+								<FontAwesomeIcon icon={faTags} size="2x" />
 								<span>Domains</span>
 							</Link>
 						</li>
 						<li>
 							<Link to="/settings" onClick={() => this.props.setMode('settings')}>
-								<FontAwesomeIcon icon={faCogs} />
+								<FontAwesomeIcon icon={faCogs} size="2x" />
 								<span>Settings</span>
 							</Link>
 						</li>
 						<li>
 							<Link to="/help" onClick={() => this.props.setMode('help')}>
-								<FontAwesomeIcon icon={faQuestion} />
+								<FontAwesomeIcon icon={faQuestion} size="2x" />
 								<span>Help</span>
 							</Link>
 						</li>
@@ -246,9 +246,9 @@ export class Menu extends Component {
 								<span>Old Website</span>
 							</a>
 						</li>*/}
-						<li style={{ display: this.props.isUnlocked ? 'block' : 'none' }}>
+						<li style={{ display: this.props.isUnlocked ? 'auto' : 'none' }}>
 							<Link to="/" onClick={() => this.props.onLogout()}>
-								<FontAwesomeIcon icon={faSignOutAlt} />
+								<FontAwesomeIcon icon={faSignOutAlt} size="2x" />
 								<span>Logout</span>
 							</Link>
 						</li>
@@ -257,7 +257,11 @@ export class Menu extends Component {
 				<Illustration collapsed={collapsed} />
 				<MenuFooter collapsed={collapsed}>
 					<div>
-						<a href="https://discord.com/invite/86eTp6m7p9" target="_blank" rel="noopener noreferrer">
+						<a
+							href="https://discord.com/invite/86eTp6m7p9"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Discord_Default.png"
 								hoverImage="/images/SocialMediaIcon_Discord_Hover.png"
@@ -287,7 +291,11 @@ export class Menu extends Component {
 							/>
 						</a>
 						*/}
-						<a href="https://github.com/Alterdot/web-wallet" target="_blank" rel="noopener noreferrer">
+						<a
+							href="https://github.com/Alterdot/web-wallet"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Github_Default.png"
 								hoverImage="/images/SocialMediaIcon_Github_Hover.png"
@@ -302,9 +310,7 @@ export class Menu extends Component {
 							/>
 						</a>
 					</div>
-					<FooterText collapsed={collapsed}>
-						&copy; 2022 Alterdot (ADOT) Developers
-					</FooterText>
+					<FooterText collapsed={collapsed}>&copy; 2022 Alterdot (ADOT) Developers</FooterText>
 					<FooterText collapsed={collapsed}>
 						<a href="/help" target="_blank" rel="noopener noreferrer">
 							Terms of Use
@@ -312,6 +318,6 @@ export class Menu extends Component {
 					</FooterText>
 				</MenuFooter>
 			</Container>
-		)
+		);
 	}
 }

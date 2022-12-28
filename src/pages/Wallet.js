@@ -1,19 +1,19 @@
-﻿import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
-import update from 'immutability-helper'
-import { Balances } from './Balances'
-import { Send } from './Send'
-import { Receive } from './Receive'
-import { Transactions } from './Transactions'
-import { Mnemonic } from 'alterdot-lib'
-import SkyLight from 'react-skylight'
-import { NotificationContainer, NotificationManager } from 'react-notifications'
-import 'react-notifications/lib/notifications.css'
-import * as constants from './constants.js'
+﻿import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
+import update from 'immutability-helper';
+import { Balances } from '../cards/Balances';
+import { Send } from '../cards/Send';
+import { Receive } from '../cards/Receive';
+import { Transactions } from '../cards/Transactions';
+import { Mnemonic } from 'alterdot-lib';
+import SkyLight from 'react-skylight';
+import { NotificationContainer, NotificationManager } from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
+import * as constants from '../constants/network.js';
 
-export class LoggedIn extends Component {
+export class Wallet extends Component {
 	constructor(props) {
-		super(props)
+		super(props);
 		this.state = {
 			selectedCurrency: 'USD',
 			transactions: [],
@@ -25,16 +25,16 @@ export class LoggedIn extends Component {
 				props.addressBalances && Object.keys(props.addressBalances).length > 0
 					? Object.keys(props.addressBalances)[0]
 					: '',
-		}
+		};
 		this.updatingBalanceController = new window.AbortController();
-		var component = this
+		var component = this;
 		this.skipInitialTxInterval = setTimeout(() => {
-			component.setState({ skipInitialTransactionsNotifications: false })
-		}, 11873)
+			component.setState({ skipInitialTransactionsNotifications: false });
+		}, 11873);
 		this.skipEmptyAddressesInterval = setTimeout(() => {
 			// Only check empty old addresses after 1 minute, then they are not longer checked
-			component.setState({ skipEmptyAddresses: false })
-		}, 70000)
+			component.setState({ skipEmptyAddresses: false });
+		}, 70000);
 	}
 	componentDidMount() {
 		var component = this;
@@ -47,44 +47,44 @@ export class LoggedIn extends Component {
 		let sizeAddressBalances = Object.keys(this.props.addressBalances).length;
 		if (sizeAddressBalances !== Object.keys(prevProps.addressBalances).length) {
 			this.fillTransactions(Object.keys(this.props.addressBalances));
-			this.setState({ lastAddress: Object.keys(this.props.addressBalances)[sizeAddressBalances - 1] });
+			this.setState({
+				lastAddress: Object.keys(this.props.addressBalances)[sizeAddressBalances - 1],
+			});
 		}
 	}
 	componentWillUnmount() {
-		clearInterval(this.skipInitialTxInterval)
-		clearInterval(this.skipEmptyAddressesInterval)
-		clearInterval(this.updateBalanceInterval)
+		clearInterval(this.skipInitialTxInterval);
+		clearInterval(this.skipEmptyAddressesInterval);
+		clearInterval(this.updateBalanceInterval);
 		if (this.updatingBalanceController) this.updatingBalanceController.abort();
 	}
-	addTransaction = tx => {
+	addTransaction = (tx) => {
 		// If we already got this tx, there is nothing we need to do, new ones are just added on top
-		for (var existingTx of this.state.transactions) if (existingTx.id === tx.id) return
+		for (var existingTx of this.state.transactions) if (existingTx.id === tx.id) return;
 		// Must be updated with state, see https://jsbin.com/mofekakuqi/7/edit?js,output
-		this.setState(state => update(state, { transactions: { $push: [tx] } }))
+		this.setState((state) => update(state, { transactions: { $push: [tx] } }));
 		if (
 			!this.state.skipInitialTransactionsNotifications &&
 			tx.amountChange > 0 &&
 			tx.amountChange !== this.lastAmountChange
 		) {
-			this.lastAmountChange = tx.amountChange
+			this.lastAmountChange = tx.amountChange;
 			NotificationManager.warning(
 				'Incoming transaction',
 				'+' + this.showAlterdotNumber(tx.amountChange)
-			)
+			);
 		}
-	}
-	showAlterdotNumber = amount => {
-		return this.props.showNumber(amount, 8) + ' ADOT'
-	}
-	fillTransactionFromAddress = address => {
-		fetch(
-			'https://' + this.props.explorer + '/insight-api/txs/?address=' + address,
-			{
-				mode: 'cors',
-				cache: 'no-cache',
-			})
-			.then(response => response.json())
-			.then(data => {
+	};
+	showAlterdotNumber = (amount) => {
+		return this.props.showNumber(amount, 8) + ' ADOT';
+	};
+	fillTransactionFromAddress = (address) => {
+		fetch('https://' + this.props.explorer + '/insight-api/txs/?address=' + address, {
+			mode: 'cors',
+			cache: 'no-cache',
+		})
+			.then((response) => response.json())
+			.then((data) => {
 				const txs = data.txs;
 				for (var index = 0; index < txs.length; index++) {
 					const tx = txs[index];
@@ -94,7 +94,7 @@ export class LoggedIn extends Component {
 					for (var i = 0; i < vin.length; i++)
 						if (this.isOwnAddress(vin[i]['addr'], address))
 							amountChange -= parseFloat(vin[i]['value']);
-					const vout = tx['vout']
+					const vout = tx['vout'];
 					for (var j = 0; j < vout.length; j++)
 						if (this.isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
 							amountChange += parseFloat(vout[j]['value']);
@@ -108,16 +108,16 @@ export class LoggedIn extends Component {
 						txlock: tx.txlock,
 					});
 				}
-			})
-	}
+			});
+	};
 	isOwnAddress = (addressToCheck, sendAddress) => {
 		if (addressToCheck === sendAddress) return true;
 		return Object.keys(this.props.addressBalances).includes(addressToCheck);
-	}
-	fillTransactions = addresses => {
-		console.log("fillTransactions", addresses);
+	};
+	fillTransactions = (addresses) => {
+		console.log('fillTransactions', addresses);
 		for (var address of addresses) this.fillTransactionFromAddress(address);
-	}
+	};
 	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
 	balanceCheck = () => {
 		for (var addressToCheck of Object.keys(this.props.addressBalances))
@@ -125,59 +125,50 @@ export class LoggedIn extends Component {
 				this.updateAddressBalance(addressToCheck);
 				this.fillTransactionFromAddress(addressToCheck);
 			}
-	}
-	isValidAlterdotAddress = address => { // TODO_ADOT_MEDIUM extract common utility functions
-		return (
-			address &&
-			address.length >= 34 &&
-			(address[0] === 'C' || address[0] === '5')
-		)
-	}
+	};
+	isValidAlterdotAddress = (address) => {
+		// TODO_ADOT_MEDIUM extract common utility functions
+		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
+	};
 	updateAddressBalance = (addressToCheck) => {
 		var component = this;
-		fetch(
-			'https://' + this.props.explorer + '/insight-api/addr/' + addressToCheck,
-			{
-				mode: 'cors',
-				cache: 'no-cache',
-				signal: this.updatingBalanceController.signal,
-			})
-			.then(response => response.json())
-			.then(data => {
+		fetch('https://' + this.props.explorer + '/insight-api/addr/' + addressToCheck, {
+			mode: 'cors',
+			cache: 'no-cache',
+			signal: this.updatingBalanceController.signal,
+		})
+			.then((response) => response.json())
+			.then((data) => {
 				if (data && !isNaN(data.balance)) {
 					var newBalance = parseFloat(data.balance);
 
-					if (!isNaN(data.unconfirmedBalance))
-						newBalance += parseFloat(data.unconfirmedBalance);
-					
+					if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance);
+
 					console.log('Balance of ' + addressToCheck + ': ' + newBalance);
 					// Exclude any masternode amounts TODO_ADOT_HIGH exclusion for MNs
-					if (newBalance < constants.DUST_AMOUNT_IN_ADOT)
-						newBalance = 0;
+					if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0;
 
 					var addressBalance = {};
 					addressBalance[addressToCheck] = newBalance;
 					component.props.updateAddressBalances(addressBalance);
 				}
 			})
-			.catch(error => console.log(error));
-	}
-	addLastAddress = lastAddress => {
+			.catch((error) => console.log(error));
+	};
+	addLastAddress = (lastAddress) => {
 		var lastAddressBalance = {};
 		lastAddressBalance[lastAddress] = 0;
 		this.props.updateAddressBalances(lastAddressBalance);
 		this.setState({ lastAddress: lastAddress });
-	}
+	};
 	fillTransactionFromId = (txId, txIndex) => {
 		if (!txId) return;
-		fetch(
-			'https://' + this.props.explorer + '/insight-api/tx/' + txId,
-			{
-				mode: 'cors',
-				cache: 'no-cache',
-			})
-			.then(response => response.json())
-			.then(tx => {
+		fetch('https://' + this.props.explorer + '/insight-api/tx/' + txId, {
+			mode: 'cors',
+			cache: 'no-cache',
+		})
+			.then((response) => response.json())
+			.then((tx) => {
 				this.addTransaction({
 					id: txId,
 					amountChange: parseFloat(tx.vout[txIndex]['value']),
@@ -187,38 +178,39 @@ export class LoggedIn extends Component {
 					fees: tx.fees,
 					txlock: tx.txlock,
 				});
-			})
-	}
+			});
+	};
 	getUnusedAddress = () => {
 		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
-			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
+			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password);
 			if (hdS === '')
-				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
-			var mnemonic = new Mnemonic(hdS)
-			var xpriv = mnemonic.toHDPrivateKey()
+				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!';
+			var mnemonic = new Mnemonic(hdS);
+			var xpriv = mnemonic.toHDPrivateKey();
 			var lastAddress = xpriv
 				.derive("m/44'/5'/0'/0/" + Object.keys(this.props.addressBalances).length)
 				.privateKey.toAddress()
-				.toString()
+				.toString();
 			this.addLastAddress(lastAddress);
 		} else {
 			this.showPasswordDialog.show();
 		}
-	}
+	};
 	scanWalletAddresses = (numberAddresses) => {
 		var walletAddresses = {};
-		
+
 		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
-			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password)
+			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password);
 			if (hdS === '')
-				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!'
-			var mnemonic = new Mnemonic(hdS)
-			var xpriv = mnemonic.toHDPrivateKey()
-			
+				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!';
+			var mnemonic = new Mnemonic(hdS);
+			var xpriv = mnemonic.toHDPrivateKey();
+
 			for (var i = 0; i < numberAddresses; i++) {
-				var nextAddress = xpriv.derive("m/44'/5'/0'/0/" + i)
-									.privateKey.toAddress()
-									.toString();
+				var nextAddress = xpriv
+					.derive("m/44'/5'/0'/0/" + i)
+					.privateKey.toAddress()
+					.toString();
 				walletAddresses[nextAddress] = 0;
 			}
 
@@ -229,18 +221,18 @@ export class LoggedIn extends Component {
 			this.setState({ scanWallet: true });
 			this.showPasswordDialog.show();
 		}
-	}
+	};
 	getSelectedCurrencyAlterdotPrice = () => {
 		return this.state.selectedCurrency === 'EUR'
 			? this.props.priceEur
 			: this.state.selectedCurrency === 'GBP'
 			? this.props.priceGbp
-			: this.props.priceUsd
-	}
+			: this.props.priceUsd;
+	};
 	getPrivateSendBalance = () => {
-		var mixedAmount = 0
+		var mixedAmount = 0;
 		for (var key of Object.keys(this.props.addressBalances)) {
-			var amount = this.props.addressBalances[key]
+			var amount = this.props.addressBalances[key];
 			// check for supported denominations
 			if (
 				amount === 0.00100001 ||
@@ -249,15 +241,15 @@ export class LoggedIn extends Component {
 				amount === 1.00001 ||
 				amount === 10.0001
 			)
-				mixedAmount += amount
+				mixedAmount += amount;
 		}
-		return mixedAmount.toFixed(8)
-	}
+		return mixedAmount.toFixed(8);
+	};
 	render() {
 		return (
 			<div id="main" className="main_dashboard_otr">
 				<h1>{this.props.unlockedText}</h1>
-				<div className='main-left'>
+				<div className="main-left">
 					<Send
 						explorer={this.props.explorer}
 						popupDialog={this.props.popupDialog}
@@ -273,7 +265,9 @@ export class LoggedIn extends Component {
 						showAlterdotNumber={this.showAlterdotNumber}
 						onDecrypt={this.props.onDecrypt}
 						addTransaction={this.addTransaction}
-						setRememberedPassword={rememberPassword => this.setState({ password: rememberPassword })}
+						setRememberedPassword={(rememberPassword) =>
+							this.setState({ password: rememberPassword })
+						}
 						isValidAlterdotAddress={this.isValidAlterdotAddress}
 						updateBalanceAddressStorage={this.props.updateBalanceAddressStorage}
 					/>
@@ -286,7 +280,7 @@ export class LoggedIn extends Component {
 						showNumber={this.props.showNumber}
 					/>
 				</div>
-				<div className='main-right'>
+				<div className="main-right">
 					<Balances
 						totalBalance={this.props.totalBalance}
 						privateSendBalance={this.getPrivateSendBalance()}
@@ -294,7 +288,7 @@ export class LoggedIn extends Component {
 						setMode={this.props.setMode}
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
 						selectedCurrency={this.state.selectedCurrency}
-						setSelectedCurrency={value => this.setState({ selectedCurrency: value })}
+						setSelectedCurrency={(value) => this.setState({ selectedCurrency: value })}
 					/>
 					<Receive
 						explorer={this.props.explorer}
@@ -306,13 +300,13 @@ export class LoggedIn extends Component {
 						showAlterdotNumber={this.showAlterdotNumber}
 					/>
 				</div>
-				<div className='circle1'></div> {/* TODO_ADOT_MEDIUM move to background */}
-				<div className='circle2'></div>
-				<div className='circle3'></div>
+				<div className="circle1"></div> {/* TODO_ADOT_MEDIUM move to background */}
+				<div className="circle2"></div>
+				<div className="circle3"></div>
 				<SkyLight
 					dialogStyles={this.props.popupDialog}
 					hideOnOverlayClicked
-					ref={ref => (this.showPasswordDialog = ref)}
+					ref={(ref) => (this.showPasswordDialog = ref)}
 					title="Enter your HD Wallet password"
 				>
 					<br />
@@ -322,23 +316,27 @@ export class LoggedIn extends Component {
 						autoFocus={true}
 						style={{ borderBottom: '1px solid gray', fontSize: '16px' }}
 						value={this.state.password}
-						onChange={e => this.setState({ password: e.target.value })}
-						onKeyDown={e => {
+						onChange={(e) => this.setState({ password: e.target.value })}
+						onKeyDown={(e) => {
 							if (e.key === 'Enter') {
-								this.onEnteredPassword()
+								this.onEnteredPassword();
 							}
 						}}
 					/>
 					<br />
 					<br />
-					<button onClick={() => { this.onEnteredPassword(); }}>
+					<button
+						onClick={() => {
+							this.onEnteredPassword();
+						}}
+					>
 						Ok
 					</button>
 				</SkyLight>
 				<SkyLight
 					dialogStyles={this.props.popupDialog}
 					hideOnOverlayClicked
-					ref={ref => (this.hdWalletTooMuchBalanceWarning = ref)}
+					ref={(ref) => (this.hdWalletTooMuchBalanceWarning = ref)}
 					title="Too many funds, use a hardware wallet!"
 				>
 					<br />
@@ -362,16 +360,13 @@ export class LoggedIn extends Component {
 				</SkyLight>
 				<NotificationContainer />
 			</div>
-		)
+		);
 	}
 
 	onEnteredPassword() {
-		this.showPasswordDialog.hide()
+		this.showPasswordDialog.hide();
 
-		if (this.state.scanWallet)
-			this.scanWalletAddresses(10)
-
-		else
-			this.getUnusedAddress()
+		if (this.state.scanWallet) this.scanWalletAddresses(10);
+		else this.getUnusedAddress();
 	}
 }

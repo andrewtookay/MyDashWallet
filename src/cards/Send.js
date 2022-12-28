@@ -1,12 +1,12 @@
-import React, { useState, useRef } from 'react'
-import styled from 'styled-components'
-import QrReader from 'react-qr-reader'
-import { Mnemonic, Transaction } from 'alterdot-lib'
-import { NotificationManager } from 'react-notifications'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQrcode } from '@fortawesome/free-solid-svg-icons'
-import SkyLight from 'react-skylight'
-import * as constants from './constants.js'
+import React, { useState, useRef } from 'react';
+import styled from 'styled-components';
+import QrReader from 'react-qr-reader';
+import { Mnemonic, Transaction } from 'alterdot-lib';
+import { NotificationManager } from 'react-notifications';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faQrcode } from '@fortawesome/free-solid-svg-icons';
+import SkyLight from 'react-skylight';
+import * as constants from '../constants/network.js';
 
 var lastKnownNumberOfInputs = 1;
 var txFee = 2260 * constants.ADOT_PER_DUFF;
@@ -23,22 +23,20 @@ const Panel = styled.div`
 		float: none;
 		width: 100%;
 		margin-right: 0;
-		margin-bottom: 10px;
-		font-size: 12px;
 	}
-`
+`;
 
-export function Send(props) {
+export const Send = (props) => {
 	const [destinationAddress, setDestinationAddress] = useState('');
 	const [amount, setAmount] = useState({ amountADOT: 0, amountUSD: 0 });
 	const [displayedError, setDisplayedError] = useState('');
 	const [password, setPassword] = useState('');
 	const [qrData, setQrData] = useState({ enableQrScanner: false, addressPreviewResult: '' });
 	const [sendTransaction, setSendTransaction] = useState('');
-	
+
 	const confirmSendDialog = useRef(null);
 	const successSendDialog = useRef(null);
-	
+
 	function sendAlterdot() {
 		if (
 			amount.amountADOT < constants.DUST_AMOUNT_IN_ADOT ||
@@ -46,15 +44,17 @@ export function Send(props) {
 			!props.isValidAlterdotAddress(destinationAddress)
 		) {
 			NotificationManager.error(
-				!props.isValidAlterdotAddress(destinationAddress)
-					? 'Invalid address'
-					: 'Invalid amount'
-			)
-			setDisplayedError('Please use an amount you have and a valid address to send to. Unable to create transaction.');
+				!props.isValidAlterdotAddress(destinationAddress) ? 'Invalid address' : 'Invalid amount'
+			);
+			setDisplayedError(
+				'Please use an amount you have and a valid address to send to. Unable to create transaction.'
+			);
 		} else if (!props.isCorrectPasswordHash(password)) {
-			setDisplayedError('Please enter your correct password to unlock your wallet for sending ADOT.');
+			setDisplayedError(
+				'Please enter your correct password to unlock your wallet for sending ADOT.'
+			);
 		} else {
-			props.setRememberedPassword(password)
+			props.setRememberedPassword(password);
 			addNextAddressWithUnspendFundsToRawTx(
 				getAddressesWithUnspendFunds(),
 				0,
@@ -65,56 +65,61 @@ export function Send(props) {
 				[],
 				[],
 				''
-			)
+			);
 			confirmSendDialog.current.hide();
 		}
 	}
-	
+
 	function getAddressesWithUnspendFunds() {
-		var addresses = []
-		var addressIndex = 0
+		var addresses = [];
+		var addressIndex = 0;
 		for (var key of Object.keys(props.addressBalances)) {
-			var amount = props.addressBalances[key]
+			var amount = props.addressBalances[key];
 			if (!isNaN(amount) && amount > constants.DUST_AMOUNT_IN_ADOT)
-				addresses.push({ addressIndex: addressIndex, address: key })
-			addressIndex++
+				addresses.push({ addressIndex: addressIndex, address: key });
+			addressIndex++;
 		}
-		return addresses
+		return addresses;
 	}
 	function handleErrors(response) {
 		if (!response.ok) {
 			if (typeof response.text === 'function') {
-				return response.text().then(errorMessage => {
-					throw Error(response.status + ': ' + errorMessage)
-				})
-			} else throw Error(response.status + ': ' + response.statusText)
+				return response.text().then((errorMessage) => {
+					throw Error(response.status + ': ' + errorMessage);
+				});
+			} else throw Error(response.status + ': ' + response.statusText);
 		}
-		return response.json()
+		return response.json();
 	}
 	function handleErrorsText(response) {
 		if (!response.ok) {
 			if (typeof response.text === 'function') {
-				return response.text().then(errorMessage => {
-					throw Error(response.status + ': ' + errorMessage)
-				})
-			} else throw Error(response.status + ': ' + response.statusText)
+				return response.text().then((errorMessage) => {
+					throw Error(response.status + ': ' + errorMessage);
+				});
+			} else throw Error(response.status + ': ' + response.statusText);
 		}
-		return response.text()
+		return response.text();
 	}
 	// this is only a guess as we don't know how many inputs are on each address, but on a normal hd wallet it is quite ok
 	function getNumberOfInputsRequired(amountToSend) {
-		var numberOfAddressesToUse = 0
+		var numberOfAddressesToUse = 0;
 		for (var key of Object.keys(props.addressBalances)) {
-			var amount = props.addressBalances[key]
+			var amount = props.addressBalances[key];
 			if (!isNaN(amount) && amount > constants.DUST_AMOUNT_IN_ADOT) {
-				numberOfAddressesToUse++
-				amountToSend -= amount
-				if (amountToSend <= 0) return numberOfAddressesToUse
+				numberOfAddressesToUse++;
+				amountToSend -= amount;
+				if (amountToSend <= 0) return numberOfAddressesToUse;
 			}
 		}
-		return numberOfAddressesToUse
+		return numberOfAddressesToUse;
 	}
 	function updateTxFee(numberOfInputs) {
+		// getUnspentOutputs(Object.keys(props.addressBalances), (result) => {
+		// 	let utxos = JSON.parse(result);
+		// 	console.log(utxos);
+		// });
+
 		if (!numberOfInputs || numberOfInputs <= 0) {
 			// Try to figure out how many inputs we would need if we have multiple addresses
 			numberOfInputs = 0;
@@ -122,7 +127,7 @@ export function Send(props) {
 			// TODO_ADOT_HIGH this only takes into account the number of addresses, not actual inputs
 			// use the addrs/utxo endpoint from the insight-api
 			for (var address of Object.keys(props.addressBalances)) {
-				var amountToSend = props.addressBalances[address]
+				var amountToSend = props.addressBalances[address];
 				if (amountToSend > 0 && amountToCheck > 0.00000001) {
 					numberOfInputs++;
 					amountToCheck -= amountToSend;
@@ -135,7 +140,7 @@ export function Send(props) {
 		// inputs). All this is recalculated below and on the server side once number of inputs is known. TODO_ADOT_HIGH update comments
 		txFee = (0.0078 + 0.0148 * numberOfInputs) / 1000;
 		if (!txFee) txFee = 1920 * constants.ADOT_PER_DUFF;
-		
+
 		if (
 			amount.amountADOT < constants.DUST_AMOUNT_IN_ADOT ||
 			amount.amountADOT > parseFloat(props.totalBalance) + constants.DUST_AMOUNT_IN_ADOT
@@ -144,6 +149,21 @@ export function Send(props) {
 			if (amount.amountADOT > 0) setAmount({ amountADOT: 0, amountUSD: 0 });
 		}
 	}
+	// function getUnspentOutputs(addresses, callback) {
+	// 	fetch('https://insight.alterdot.network/insight-api/addrs/utxo', {
+	// 		mode: 'cors',
+	// 		cache: 'no-cache',
+	// 		method: 'POST',
+	// 		body: `addrs: ${Object.keys(addresses).join(',')}`,
+	// 		headers: { 'Content-Type': 'text/plain' },
+	// 	})
+	// 	.then(handleErrorsText)
+	// 	.then(callback)
+	// 	.catch(function(serverError) {
+	// 		NotificationManager.error('Server Error!');
+	// 		setDisplayedError('Server Error: ' + (serverError.message || serverError));
+	// 	});
+	// }
 	function getTotalAmountNeededByRecalculatingTxFee(txToUse) {
 		// Recalculate txFee, now we know the actual number of inputs needed
 		updateTxFee(txToUse.length);
@@ -151,10 +171,13 @@ export function Send(props) {
 		var totalAmountNeeded = parseFloat(amount.amountADOT) + parseFloat(txFee);
 		console.log(totalAmountNeeded, txFee);
 		// If we send everything, subtract txFee so we can actually send everything
-		if (totalAmountNeeded >= props.totalBalance)
-			totalAmountNeeded = parseFloat(props.totalBalance);
+		if (totalAmountNeeded >= props.totalBalance) totalAmountNeeded = parseFloat(props.totalBalance);
 		return totalAmountNeeded;
 	}
+	// TODO_ADOT_HIGH Possible implementation: keep track of UTXOs locally and use funds from some selected addresses (default: all)
+	// iterate through these UTXOs and build the transaction and calculate the fee at the same time
+	// update UTXOs when an address changes its balance
+	// TODO_ADOT_FUTURE create getFeePerByte endpoint in API with values for slow, normal, and fast transactions, allow for setting of custom fee
 	function addNextAddressWithUnspendFundsToRawTx(
 		addressesWithUnspendInputs,
 		addressesWithUnspendInputsIndex,
@@ -168,7 +191,9 @@ export function Send(props) {
 	) {
 		if (addressesWithUnspendInputsIndex >= addressesWithUnspendInputs.length) {
 			NotificationManager.error('Insufficient funds!');
-			setDisplayedError("It looks like you do not have enough funds to complete this transaction. If you do, wait for the next block. Please email a.alterdot@gmail.com for assistance.");
+			setDisplayedError(
+				'It looks like you do not have enough funds to complete this transaction. If you do, wait for the next block. Please email a.alterdot@gmail.com for assistance.'
+			);
 			return;
 		}
 		setDisplayedError('');
@@ -182,10 +207,10 @@ export function Send(props) {
 			}
 		)
 			.then(handleErrors)
-			.then(utxos => {
+			.then((utxos) => {
 				var thisAddressAmountToUse = 0;
 				var totalAmountNeeded = getTotalAmountNeededByRecalculatingTxFee(txToUse);
-				console.log("utxos:", utxos);
+				console.log('utxos:', utxos);
 				for (var i = 0; i < utxos.length; i++) {
 					var amount = utxos[i]['amount'];
 					if (amount >= constants.DUST_AMOUNT_INPUTS_IN_ADOT) {
@@ -196,17 +221,19 @@ export function Send(props) {
 						);
 						thisAddressAmountToUse += amount;
 						txAmountTotal += amount;
-						utxosToSpend.push(new Transaction.UnspentOutput({
-							txId: utxos[i].txid,
-							outputIndex: utxos[i].vout,
-							address: utxos[i].address,
-							script: utxos[i].scriptPubKey, // add check, make sure Script.fromAddress(address) === utxos[index].scriptPubKey
-							satoshis: utxos[i].satoshis
-						}));
+						utxosToSpend.push(
+							new Transaction.UnspentOutput({
+								txId: utxos[i].txid,
+								outputIndex: utxos[i].vout,
+								address: utxos[i].address,
+								script: utxos[i].scriptPubKey, // add check, make sure Script.fromAddress(address) === utxos[index].scriptPubKey
+								satoshis: utxos[i].satoshis,
+							})
+						);
 						totalAmountNeeded = getTotalAmountNeededByRecalculatingTxFee(txToUse);
-						console.log("here0", txAmountTotal, totalAmountNeeded, txFee);
-						if (txAmountTotal >= totalAmountNeeded) break
-						console.log("here1");
+						console.log('here0', txAmountTotal, totalAmountNeeded, txFee);
+						if (txAmountTotal >= totalAmountNeeded) break;
+						console.log('here1');
 					}
 				}
 				inputListText +=
@@ -216,9 +243,10 @@ export function Send(props) {
 					address +
 					' (-' +
 					props.showAlterdotNumber(thisAddressAmountToUse) +
-					')'
+					')';
 				// Add extra offset in case we are very close to the txFee with total amount!
-				if (txAmountTotal >= totalAmountNeeded - txFee * 2) { // TODO_ADOT_COMMENT with our wallet calculations will happen locally so we need exact numbers
+				if (txAmountTotal >= totalAmountNeeded - txFee * 2) {
+					// TODO_ADOT_COMMENT with our wallet calculations will happen locally so we need exact numbers
 					// the user must know how much gets sent and how much is spent on fees
 
 					// We have all the inputs we need, we can now create the raw tx
@@ -235,23 +263,34 @@ export function Send(props) {
 					//var usePrivateSend = false //TODO: $("#usePrivateSend").is(':checked');
 					// Update amountToSend in case we had to reduce it a bit to allow for the txFee
 					var amountToSend = props.showNumber(totalAmountNeeded - txFee, 8); // totalAmountNeeded is amountToSend + txFee so this seems useless?
-					if (amountToSend !== amount.amountADOT) setAmount({ amountADOT: amountToSend, amountUSD: 0 });
+					if (amountToSend !== amount.amountADOT)
+						setAmount({ amountADOT: amountToSend, amountUSD: 0 });
 					//var remainingAlterdot = txAmountTotal - totalAmountNeeded
 					var tx = new Transaction();
-					console.log("txToUse: " + txToUse + " txOutputIndexToUse: " + txOutputIndexToUse + " sendTo: " + sendTo + " amountToSend: " + props.showNumber(amountToSend, 8) +
-					" remainingAddress: " + remainingAddress);
+					console.log(
+						'txToUse: ' +
+							txToUse +
+							' txOutputIndexToUse: ' +
+							txOutputIndexToUse +
+							' sendTo: ' +
+							sendTo +
+							' amountToSend: ' +
+							props.showNumber(amountToSend, 8) +
+							' remainingAddress: ' +
+							remainingAddress
+					);
 
 					console.log(utxosToSpend);
 					tx.from(utxosToSpend);
-					console.log("amountToSend pre-parseInt: " + (amountToSend * 100000000).toFixed(0));
+					console.log('amountToSend pre-parseInt: ' + (amountToSend * 100000000).toFixed(0));
 					amountToSend = parseInt((amountToSend * 100000000).toFixed(0));
-					console.log("amountToSend", amountToSend);
+					console.log('amountToSend', amountToSend);
 					tx.to(sendTo, amountToSend); // TODO_ADOT_MEDIUM safe ADOT to satoshis/dots
-					console.log("here0");
+					console.log('here0');
 					tx.change(remainingAddress);
-					console.log("here1");
+					console.log('here1');
 					tx.fee(txFee * 100000000);
-					console.log("here2");
+					console.log('here2');
 					console.log(tx);
 
 					// TODO_ADOT_HIGH end of first method, display tx fee info
@@ -278,16 +317,16 @@ export function Send(props) {
 					NotificationManager.error('Insufficient funds');
 					setDisplayedError(
 						'Insufficient funds, cannot send ' +
-						totalAmountNeeded +
-						' Alterdot (including tx fee), you only have ' +
-						props.totalBalance +
-						' Alterdot. Unable to create transaction (please refresh this site if you have enough Alterdot)! Your inputs so far:<br><ul>' +
-						inputListText +
-						'</ul>'
+							totalAmountNeeded +
+							' Alterdot (including tx fee), you only have ' +
+							props.totalBalance +
+							' Alterdot. Unable to create transaction (please refresh this site if you have enough Alterdot)! Your inputs so far:<br><ul>' +
+							inputListText +
+							'</ul>'
 					);
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				NotificationManager.error('Server error encountered!');
 				setDisplayedError(error.message || error);
 			});
@@ -301,31 +340,30 @@ export function Send(props) {
 			headers: { 'Content-Type': 'application/json' },
 		})
 			.then(handleErrorsText)
-			.then(finalTx => {
+			.then((finalTx) => {
 				var ret = JSON.parse(finalTx);
 				// amountToSend and txFee might get here as strings
 				var sentAmount = parseFloat(amount.amountADOT);
 				txFee = parseFloat(txFee);
 
-				console.log("sendSignedRawTx BEFORE");
+				console.log('sendSignedRawTx BEFORE');
 				setDisplayedError('');
 				setPassword('');
 				setAmount({ amountADOT: 0, amountUSD: 0 });
 				setSendTransaction(ret.txid);
 
 				NotificationManager.success(
-					'Sent ' +
-						props.showAlterdotNumber(sentAmount) +
-					' to ' +
-						destinationAddress,
+					'Sent ' + props.showAlterdotNumber(sentAmount) + ' to ' + destinationAddress,
 					'Success'
 				);
-				var amountChange = props.addresses.includes(destinationAddress) ? - txFee : - (sentAmount + txFee);
+				var amountChange = props.addresses.includes(destinationAddress)
+					? -txFee
+					: -(sentAmount + txFee);
 				var newBalance = parseFloat(props.totalBalance) + amountChange;
 
 				if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0;
 				//NotificationManager.info('New balance: ' + props.showAlterdotNumber(newBalance));
-				props.setNewTotalBalance(newBalance);
+				//props.setNewTotalBalance(newBalance);
 				successSendDialog.current.show();
 				console.log(props.addresses, destinationAddress);
 				props.addTransaction({
@@ -337,29 +375,29 @@ export function Send(props) {
 					fees: txFee,
 					txlock: true,
 				});
-				props.onUpdateBalanceAndAddressesStorage(newBalance, props.addresses);
+				//props.onUpdateBalanceAndAddressesStorage(newBalance, props.addresses);
 			})
-			.catch(function(serverError) {
+			.catch(function (serverError) {
 				NotificationManager.error('Server Error!');
 				setDisplayedError('Server Error: ' + (serverError.message || serverError));
-			})
+			});
 	}
 	function getAlterdotHDWalletPrivateKeys() {
-		var keys = []
-		var index = 0
-		var mnemonic = new Mnemonic(props.onDecrypt(props.hdSeedE, password))
-		var xpriv = mnemonic.toHDPrivateKey()
+		var keys = [];
+		var index = 0;
+		var mnemonic = new Mnemonic(props.onDecrypt(props.hdSeedE, password));
+		var xpriv = mnemonic.toHDPrivateKey();
 		Object.keys(props.addressBalances).forEach(() => {
-			keys.push(xpriv.derive("m/44'/5'/0'/0/" + index).privateKey)
-			index++
-		})
-		return keys
+			keys.push(xpriv.derive("m/44'/5'/0'/0/" + index).privateKey);
+			index++;
+		});
+		return keys;
 	}
 	function handleScan(data) {
 		if (data) {
-			setQrData({ 
+			setQrData({
 				enableQrScanner: false,
-				addressPreviewResult: 'Successfully scanned QR code'
+				addressPreviewResult: 'Successfully scanned QR code',
 			});
 			setDestinationAddress(data.replace('dash:', '').split('?')[0]);
 		}
@@ -379,12 +417,7 @@ export function Send(props) {
 				Amount in ADOT: <b>{props.showAlterdotNumber(amount.amountADOT)}</b>
 				<br />
 				Amount in {props.selectedCurrency}:{' '}
-				<b>
-					{props.showNumber(
-						amount.amountADOT * props.getSelectedCurrencyAlterdotPrice(),
-						2
-					)}
-				</b>
+				<b>{props.showNumber(amount.amountADOT * props.getSelectedCurrencyAlterdotPrice(), 2)}</b>
 				<br />
 				<br />
 				Fee in ADOT: {props.showAlterdotNumber(txFee)}
@@ -410,7 +443,7 @@ export function Send(props) {
 							type="password"
 							style={{ borderBottom: '1px solid gray', fontSize: '16px' }}
 							value={password}
-							onChange={e => setPassword(e.target.value)}
+							onChange={(e) => setPassword(e.target.value)}
 						/>
 					</p>
 				</div>
@@ -430,10 +463,7 @@ export function Send(props) {
 					Confirm
 				</button>
 				<div className="cleardiv">&nbsp;</div>
-				<div
-					className="error dww-error-msg"
-					dangerouslySetInnerHTML={{ __html: displayedError }}
-				/>
+				<div className="error dww-error-msg" dangerouslySetInnerHTML={{ __html: displayedError }} />
 			</SkyLight>
 			<SkyLight
 				dialogStyles={props.popupDialog}
@@ -475,7 +505,7 @@ export function Send(props) {
 													type="text"
 													placeholder="Alterdot Address"
 													value={destinationAddress}
-													onChange={e => setDestinationAddress(e.target.value)}
+													onChange={(e) => setDestinationAddress(e.target.value)}
 												/>
 											</td>
 											<td style={{ width: '35px' }}>
@@ -486,12 +516,14 @@ export function Send(props) {
 													title="Enable QR Scanner"
 													onClick={() => {
 														if (qrData.enableQrScanner)
-															setQrData(prevQrData => { return { ...prevQrData, enableQrScanner: false }});
+															setQrData((prevQrData) => {
+																return { ...prevQrData, enableQrScanner: false };
+															});
 														else
 															setQrData({
 																enableQrScanner: true,
 																addressPreviewResult:
-																	'QR Code Scanner ready, please scan an ADOT address!'
+																	'QR Code Scanner ready, please scan an ADOT address!',
 															});
 													}}
 												/>
@@ -503,10 +535,14 @@ export function Send(props) {
 									<div>
 										<QrReader
 											delay={300}
-											onError={err => setQrData(prevQrData => { return { 
-												...prevQrData, 
-												addressPreviewResult: err.message 
-											}})}
+											onError={(err) =>
+												setQrData((prevQrData) => {
+													return {
+														...prevQrData,
+														addressPreviewResult: err.message,
+													};
+												})
+											}
 											onScan={handleScan}
 											style={{ width: '100%' }}
 										/>
@@ -522,24 +558,27 @@ export function Send(props) {
 										<input
 											type="number"
 											value={amount.amountADOT}
-											onChange={e => {
+											onChange={(e) => {
 												var newValue = parseFloat(e.target.value);
 												if (newValue < 0 || isNaN(newValue)) newValue = 0;
 												setAmount({
 													amountADOT: newValue,
 													amountUSD: props.showNumber(
-														newValue * props.getSelectedCurrencyAlterdotPrice(), 2
-													)
+														newValue * props.getSelectedCurrencyAlterdotPrice(),
+														2
+													),
 												});
 											}}
 										/>
-										<button className="max-amount"
+										<button
+											className="max-amount"
 											onClick={() => {
 												setAmount({
 													amountADOT: props.totalBalance,
 													amountUSD: props.showNumber(
-														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
-													)
+														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(),
+														2
+													),
 												});
 											}}
 										>
@@ -554,24 +593,27 @@ export function Send(props) {
 										<input
 											type="number"
 											value={amount.amountUSD}
-											onChange={e => {
+											onChange={(e) => {
 												var newValue = parseFloat(e.target.value);
 												if (newValue < 0 || isNaN(newValue)) newValue = 0;
 												setAmount({
 													amountADOT: props.showNumber(
-														newValue / props.getSelectedCurrencyAlterdotPrice(), 5
+														newValue / props.getSelectedCurrencyAlterdotPrice(),
+														5
 													),
-													amountUSD: newValue
+													amountUSD: newValue,
 												});
 											}}
 										/>
-										<button className="max-amount"
+										<button
+											className="max-amount"
 											onClick={() => {
 												setAmount({
 													amountADOT: props.totalBalance,
 													amountUSD: props.showNumber(
-														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(), 2
-													)
+														props.totalBalance * props.getSelectedCurrencyAlterdotPrice(),
+														2
+													),
 												});
 											}}
 										>
@@ -592,11 +634,12 @@ export function Send(props) {
 												`Make sure to enter a valid amount. Minimum ${constants.DUST_AMOUNT_IN_ADOT} ADOT`
 											);
 										} else if (amount.amountADOT > props.totalBalance) {
-											var balanceError =
-												`You have ${props.showAlterdotNumber(props.totalBalance)}, the amount to sent was corrected, please check and press Next again.`;
+											var balanceError = `You have ${props.showAlterdotNumber(
+												props.totalBalance
+											)}, the amount to sent was corrected, please check and press Next again.`;
 											setAmount({
 												amountADOT: props.totalBalance,
-												amountUSD: props.totalBalance * props.getSelectedCurrencyAlterdotPrice()
+												amountUSD: props.totalBalance * props.getSelectedCurrencyAlterdotPrice(),
 											});
 											setDisplayedError(balanceError);
 										} else {
@@ -616,5 +659,5 @@ export function Send(props) {
 				</div>
 			</Panel>
 		</div>
-	)
-}
+	);
+};

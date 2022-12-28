@@ -1,0 +1,16 @@
+export const popupDialog = {
+	position: 'absolute',
+	textAlign: 'left',
+	borderRadius: '8px',
+	border: 'solid 1px #979797',
+	width: '96%',
+	maxWidth: '740px',
+	height: 'auto',
+	minHeight: 'auto',
+	top: '5%',
+	left: '24px',
+	right: '4px',
+	margin: '5% auto',
+	padding: '24px',
+	marginBottom: '50px',
+};

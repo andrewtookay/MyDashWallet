@@ -1,5 +1,5 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from 'react';
+import styled from 'styled-components';
 
 const Panel = styled.div`
 	position: relative;
@@ -9,14 +9,13 @@ const Panel = styled.div`
 	padding: 15px;
 	border-radius: 15px;
 	box-shadow: 3px 3px 3px #9f434e;
-	margin-top: 20px;
+
 	@media screen and (max-width: 768px) {
 		float: none;
 		width: 100%;
 		font-size: 12px;
 	}
-	height: 42%;
-`
+`;
 
 export function Transactions(props) {
 	const renderAllTransactions = (transactions, fullSize) => {
@@ -24,7 +23,7 @@ export function Transactions(props) {
 		console.log(transactions);
 		return (
 			<div id="transactions">
-				{transactions.map(tx => {
+				{transactions.map((tx) => {
 					var isConfirmed = tx.txlock || tx.confirmations > 0 || tx.time > twoMinutesAgo;
 					var confirmedClass = isConfirmed ? 'confirmed' : 'pending';
 					var sentReceivedClass = tx.amountChange > 0 ? 'sent' : 'received';
@@ -68,19 +67,17 @@ export function Transactions(props) {
 										: ' Unconfirmed')}
 							</div>
 						</div>
-					)
+					);
 				})}
 				{transactions.length === 0 && (
-					<div>
-						No recent transactions (or still loading, please wait a few seconds)
-					</div>
+					<div>No recent transactions (or still loading, please wait a few seconds)</div>
 				)}
 			</div>
-		)
+		);
 	};
 
 	return (
-		<Panel>
+		<div className="panel" style={{ marginTop: '20px', height: '42%' }}>
 			<div className="box-title">
 				<h3>Transaction History</h3>
 			</div>
@@ -97,6 +94,6 @@ export function Transactions(props) {
 				props.transactions.slice(0, 50).sort((a, b) => b.time - a.time),
 				true
 			)}
-		</Panel>
+		</div>
 	);
 }
