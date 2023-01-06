@@ -80,6 +80,7 @@ export default class App extends Component {
 			hdSeedE
 		) {
 			this.state = {
+				selectedCurrency: 'USD',
 				priceUsd: 0.02,
 				priceEur: 0.018,
 				priceGbp: 0.015,
@@ -95,6 +96,7 @@ export default class App extends Component {
 			};
 		} else
 			this.state = {
+				selectedCurrency: 'USD',
 				priceUsd: 0.02,
 				priceEur: 0.018,
 				priceGbp: 0.015,
@@ -396,7 +398,12 @@ export default class App extends Component {
 					this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
 						<Domains explorer={this.state.explorer} popupDialog={popupDialog} />
 					) : this.state.mode === 'settings' ? (
-						<Settings explorer={this.state.explorer} onSelectExplorer={this.selectExplorer} />
+						<Settings
+							explorer={this.state.explorer}
+							onSelectExplorer={this.selectExplorer}
+							selectedCurrency={this.state.selectedCurrency}
+							setSelectedCurrency={(value) => this.setState({ selectedCurrency: value })}
+						/>
 					) : this.state.mode === 'help' ? (
 						<Help />
 					) : //) : this.state.mode === 'scripthack' ? (
@@ -406,7 +413,6 @@ export default class App extends Component {
 							explorer={this.state.explorer}
 							popupDialog={popupDialog}
 							addressBalances={this.state.addressBalances}
-							unlockedText={this.state.trezor ? 'Trezor' : this.state.ledger ? 'Ledger' : 'Wallet'}
 							rememberPassword={this.state.rememberPassword}
 							showNumber={this.showNumber}
 							totalBalance={this.state.totalBalance}
@@ -423,6 +429,7 @@ export default class App extends Component {
 							onEncrypt={this.encrypt}
 							setMode={this.setMode}
 							updateAddressBalances={this.updateAddressBalances}
+							selectedCurrency={this.state.selectedCurrency}
 						/>
 					) : (
 						<Login

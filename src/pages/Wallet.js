@@ -15,7 +15,6 @@ export class Wallet extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			selectedCurrency: 'USD',
 			transactions: [],
 			skipInitialTransactionsNotifications: true,
 			scanWallet: false,
@@ -233,9 +232,9 @@ export class Wallet extends Component {
 		}
 	};
 	getSelectedCurrencyAlterdotPrice = () => {
-		return this.state.selectedCurrency === 'EUR'
+		return this.props.selectedCurrency === 'EUR'
 			? this.props.priceEur
-			: this.state.selectedCurrency === 'GBP'
+			: this.props.selectedCurrency === 'GBP'
 			? this.props.priceGbp
 			: this.props.priceUsd;
 	};
@@ -258,7 +257,7 @@ export class Wallet extends Component {
 	render() {
 		return (
 			<div id="main" className="main_dashboard_otr">
-				<h1>{this.props.unlockedText}</h1>
+				<h1>Wallet</h1>
 				<div className="main-left">
 					<Send
 						explorer={this.props.explorer}
@@ -266,7 +265,7 @@ export class Wallet extends Component {
 						addressBalances={this.props.addressBalances}
 						hdSeedE={this.props.hdSeedE}
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.state.selectedCurrency}
+						selectedCurrency={this.props.selectedCurrency}
 						isCorrectPasswordHash={this.props.isCorrectPasswordHash}
 						getUnusedAddress={this.getUnusedAddress}
 						totalBalance={this.props.totalBalance}
@@ -285,7 +284,7 @@ export class Wallet extends Component {
 						explorer={this.props.explorer}
 						transactions={this.state.transactions}
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.state.selectedCurrency}
+						selectedCurrency={this.props.selectedCurrency}
 						showAlterdotNumber={this.showAlterdotNumber}
 						showNumber={this.props.showNumber}
 					/>
@@ -297,8 +296,7 @@ export class Wallet extends Component {
 						showNumber={this.props.showNumber}
 						setMode={this.props.setMode}
 						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.state.selectedCurrency}
-						setSelectedCurrency={(value) => this.setState({ selectedCurrency: value })}
+						selectedCurrency={this.props.selectedCurrency}
 					/>
 					<Receive
 						explorer={this.props.explorer}
