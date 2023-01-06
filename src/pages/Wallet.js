@@ -277,6 +277,7 @@ export class Wallet extends Component {
 						setRememberedPassword={(rememberPassword) =>
 							this.setState({ password: rememberPassword })
 						}
+						balanceCheck={this.balanceCheck}
 						isValidAlterdotAddress={this.isValidAlterdotAddress}
 						updateBalanceAddressStorage={this.props.updateBalanceAddressStorage}
 					/>

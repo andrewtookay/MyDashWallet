@@ -322,7 +322,7 @@ export class Menu extends Component {
 							/>
 						</a>
 					</div>
-					<FooterText collapsed={collapsed}>&copy; 2022 Alterdot (ADOT) Developers</FooterText>
+					<FooterText collapsed={collapsed}>&copy; 2023 Alterdot [ADOT] Developers</FooterText>
 					<FooterText collapsed={collapsed}>
 						<a href="/help" target="_blank" rel="noopener noreferrer">
 							Terms of Use

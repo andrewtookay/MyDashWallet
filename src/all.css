@@ -60,13 +60,12 @@ li {
 }
 a,
 .link {
-	color: #fff;
+	color: #743481;
 	text-decoration: none;
 	cursor: pointer;
 	outline: none;
 }
 .tx_link a {
-	color: #621b57;
 	font-weight: 600;
 }
 a:hover,

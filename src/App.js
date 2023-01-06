@@ -372,7 +372,7 @@ export default class App extends Component {
 
 		if (result === '' || isNaN(result)) return 0;
 
-		return result;
+		return parseFloat(result);
 	};
 	selectExplorer = (change) => {
 		console.log('Selected explorer: ' + change.value);

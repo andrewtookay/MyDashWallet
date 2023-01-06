@@ -4,7 +4,7 @@ export const popupDialog = {
 	borderRadius: '8px',
 	border: 'solid 1px #979797',
 	width: '96%',
-	maxWidth: '740px',
+	maxWidth: '640px',
 	height: 'auto',
 	minHeight: 'auto',
 	top: '5%',
