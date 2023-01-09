@@ -1,10 +1,9 @@
 ﻿import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import update from 'immutability-helper';
-import { Balances } from '../cards/Balances';
-import { Send } from '../cards/Send';
-import { Receive } from '../cards/Receive';
-import { Transactions } from '../cards/Transactions';
+import { Balances } from '../panels/Balances';
+import { Send } from '../panels/Send';
+import { Receive } from '../panels/Receive';
+import { Transactions } from '../panels/Transactions';
 import { Mnemonic } from 'alterdot-lib';
 import SkyLight from 'react-skylight';
 import { NotificationContainer, NotificationManager } from 'react-notifications';
@@ -39,10 +38,6 @@ export class Wallet extends Component {
 	componentDidMount() {
 		var component = this;
 		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 20000);
-
-		if (this.props.totalBalance * this.props.priceUsd > 100)
-			this.hdWalletTooMuchBalanceWarning.show();
-
 		this.fillTransactions(Object.keys(this.props.addressBalances));
 	}
 
@@ -316,10 +311,11 @@ export class Wallet extends Component {
 					dialogStyles={this.props.popupDialog}
 					hideOnOverlayClicked
 					ref={(ref) => (this.showPasswordDialog = ref)}
-					title="Enter your HD Wallet password"
+					title="Enter your password"
 				>
-					<br />
-					Your password is required to login and generate your next HD wallet addresses.
+					<p className="mt-3 mb-1">
+						Your password is required to generate or scan wallet addresses.
+					</p>
 					<input
 						type="password"
 						autoFocus={true}
@@ -332,40 +328,14 @@ export class Wallet extends Component {
 							}
 						}}
 					/>
-					<br />
-					<br />
 					<button
+						className="mt-3"
 						onClick={() => {
 							this.onEnteredPassword();
 						}}
 					>
 						Ok
 					</button>
-				</SkyLight>
-				<SkyLight
-					dialogStyles={this.props.popupDialog}
-					hideOnOverlayClicked
-					ref={(ref) => (this.hdWalletTooMuchBalanceWarning = ref)}
-					title="Too many funds, use a hardware wallet!"
-				>
-					<br />
-					You have too many funds on your HD Wallet in your browser. This is considered{' '}
-					<Link to="/help" onClick={() => this.props.setMode('help')}>
-						dangerous
-					</Link>
-					, only continue if you know what you are doing and are very careful.{' '}
-					<a
-						href="https://old.mydashwallet.org/AboutHardwareWallets"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Please consider using a hardware wallet
-					</a>{' '}
-					to protect your funds or simply split up your funds into long term storage and only keep a
-					small amount here for daily use.
-					<br />
-					<br />
-					<button onClick={() => this.hdWalletTooMuchBalanceWarning.hide()}>Ok</button>
 				</SkyLight>
 				<NotificationContainer />
 			</div>
