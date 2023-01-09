@@ -36,7 +36,7 @@ export const Send = (props) => {
 	const confirmSendDialog = useRef(null);
 	const successSendDialog = useRef(null);
 
-	function sendAlterdot() {
+	const sendAlterdot = () => {
 		if (!props.isValidAlterdotAddress(destinationAddress)) {
 			NotificationManager.error('Invalid address');
 		} else if (
@@ -56,7 +56,7 @@ export const Send = (props) => {
 			createAndSendRawTx();
 			confirmSendDialog.current.hide();
 		}
-	}
+	};
 
 	// TODO_ADOT_MEDIUM keep track of UTXOs locally and use funds from some selected addresses (default: all)
 	// TODO_ADOT_HIGH show if the wallet is waiting for tx confirmation

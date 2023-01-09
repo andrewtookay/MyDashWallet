@@ -1,30 +1,11 @@
 import React from 'react';
-import styled from 'styled-components';
 
-const Panel = styled.div`
-	position: relative;
-	background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
-	backdrop-filter: blur(4px);
-	z-index: 2;
-	padding: 15px;
-	border-radius: 15px;
-	box-shadow: 3px 3px 3px #9f434e;
-
-	@media screen and (max-width: 768px) {
-		float: none;
-		width: 100%;
-		font-size: 12px;
-	}
-`;
-
-export function Transactions(props) {
+export const Transactions = (props) => {
 	const renderAllTransactions = (transactions, fullSize) => {
-		var twoMinutesAgo = new Date(new Date().getTime() + 2 * 60000);
-
 		return (
 			<div id="transactions">
 				{transactions.map((tx) => {
-					var isConfirmed = tx.txlock || tx.confirmations > 0 || tx.time > twoMinutesAgo;
+					var isConfirmed = tx.txlock || tx.confirmations > 0;
 					var confirmedClass = isConfirmed ? 'confirmed' : 'pending';
 					var sentReceivedClass = tx.amountChange > 0 ? 'sent' : 'received';
 					var combinedClass = `${confirmedClass} ${sentReceivedClass} tx-row`;
@@ -57,14 +38,16 @@ export function Transactions(props) {
 									(tx.amountChange * props.getSelectedCurrencyAlterdotPrice()).toFixed(2)}
 							</div>
 							<div className="colConfirmations">
-								{tx.confirmations +
-									(props.showNumber(tx.amountChange, fullSize ? 8 : 5) === '0'
-										? ' PrivateSend'
-										: tx.txlock
-										? ' InstantSend'
-										: isConfirmed
-										? ''
-										: ' Unconfirmed')}
+								{
+									tx.confirmations +
+										(props.showNumber(tx.amountChange, fullSize ? 8 : 5) === '0'
+											? ' PrivateSend'
+											: tx.txlock
+											? ' InstantSend'
+											: isConfirmed
+											? ''
+											: ' Unconfirmed') /* TODO_ADOT_MEDIUM show confirmations, or not? */
+								}
 							</div>
 						</div>
 					);
@@ -96,4 +79,4 @@ export function Transactions(props) {
 			)}
 		</div>
 	);
-}
+};

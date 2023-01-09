@@ -7,7 +7,7 @@ import {
 	faWallet,
 	faQuestion,
 	faTags,
-	faCogs,
+	faCog,
 	faSignOutAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import 'react-dropdown/style.css';
@@ -59,6 +59,9 @@ const ToggleButton = styled.div`
 	svg {
 		width: 30px;
 		height: 34px;
+	}
+	:hover {
+		color: #f6a803;
 	}
 	justify-content: ${(props) => (props.collapsed ? 'center' : 'initial')};
 `;
@@ -242,7 +245,7 @@ export class Menu extends Component {
 						</li>
 						<li>
 							<Link to="/settings" onClick={() => this.props.setMode('settings')}>
-								<FontAwesomeIcon icon={faCogs} />
+								<FontAwesomeIcon icon={faCog} />
 								<span>Settings</span>
 							</Link>
 						</li>
