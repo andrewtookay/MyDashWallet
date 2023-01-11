@@ -12,6 +12,7 @@ import styled from 'styled-components';
 import './all.css';
 import { ADOT_PER_DUFF } from './constants/network.js';
 import { popupDialog } from './constants/styling.js';
+import { Browser } from './pages/Browser';
 
 const PageContainer = styled.div`
 	background: linear-gradient(to top right, #ed5a2d, #c1616e);
@@ -27,19 +28,14 @@ const PageContainer = styled.div`
 const MainContainer = styled.div`
 	display: inline-block;
 	vertical-align: middle;
-	margin-left: -3px;
-	width: ${(props) => (props.collapsed ? '86%' : props.isSmallScreen ? '97%' : '80%')};
+	width: ${(props) => (props.collapsed ? '94%' : props.isSmallScreen ? '96%' : '80%')};
 	height: 100%;
-	padding-top: 30px;
-	padding-left: 50px;
-	padding-right: 40px;
+	padding: 30px 50px;
 	@media screen and (max-width: 1200px) {
-		padding-left: 30px;
-		padding-right: 20px;
+		padding: 20px 30px;
 	}
 	@media screen and (max-width: 767px) {
-		padding-left: 20px;
-		padding-right: 0;
+		padding: 10px 14px;
 	}
 `;
 const Loader = styled.div`
@@ -194,6 +190,8 @@ export default class App extends Component {
 	getModeFromUrl = () => {
 		return window.location.href.endsWith('domains')
 			? 'domains'
+			: window.location.href.endsWith('browser')
+			? 'browser'
 			: window.location.href.endsWith('help') || window.location.href.includes('about')
 			? 'help'
 			: '';
@@ -396,7 +394,9 @@ export default class App extends Component {
 					{this.state.mode === 'domains' &&
 					this.state.hdSeedE &&
 					this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
-						<Domains explorer={this.state.explorer} popupDialog={popupDialog} />
+						<Domains />
+					) : this.state.mode === 'browser' ? (
+						<Browser />
 					) : this.state.mode === 'settings' ? (
 						<Settings
 							explorer={this.state.explorer}

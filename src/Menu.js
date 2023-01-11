@@ -9,12 +9,13 @@ import {
 	faTags,
 	faCog,
 	faSignOutAlt,
+	faWindowRestore,
 } from '@fortawesome/free-solid-svg-icons';
 import 'react-dropdown/style.css';
 
 const Container = styled.div`
 	transition: all linear 0.2s;
-	width: ${(props) => (props.collapsed ? '96px' : '18%')};
+	width: ${(props) => (props.collapsed ? '6%' : '20%')};
 	height: 100%;
 	border-radius: 40px;
 	min-height: ${(props) => (props.collapsed ? '800px' : '600px')};
@@ -26,8 +27,8 @@ const Container = styled.div`
 	display: inline-block;
 	vertical-align: top;
 	color: white;
-	padding-left: ${(props) => (props.collapsed ? '0' : '5px')};
-	padding-right: ${(props) => (props.collapsed ? '0' : '5px')};
+	padding-left: ${(props) => (props.collapsed ? '0' : '10px')};
+	padding-right: ${(props) => (props.collapsed ? '0' : '10px')};
 	@media screen and (max-width: 767px) {
 		width: ${(props) => (props.collapsed ? '44px' : '100%')};
 		position: relative;
@@ -43,7 +44,7 @@ const Container = styled.div`
 	}
 `;
 const ToggleButton = styled.div`
-	margin-top: 10px;
+	margin-top: 15px;
 	padding: 15px 20px;
 	cursor: pointer;
 	span {
@@ -241,6 +242,12 @@ export class Menu extends Component {
 							<Link to="/domains" onClick={() => this.props.setMode('domains')}>
 								<FontAwesomeIcon icon={faTags} />
 								<span>Domains</span>
+							</Link>
+						</li>
+						<li>
+							<Link to="/browser" onClick={() => this.props.setMode('browser')}>
+								<FontAwesomeIcon icon={faWindowRestore} />
+								<span>Browser</span>
 							</Link>
 						</li>
 						<li>

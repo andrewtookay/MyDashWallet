@@ -60,7 +60,7 @@ export const Transactions = (props) => {
 	};
 
 	return (
-		<div className="panel" style={{ marginTop: '20px', height: '42%' }}>
+		<div className="panel" style={{ marginTop: '20px', height: '44%' }}>
 			<div className="box-title">
 				<h3>Transaction History</h3>
 			</div>
