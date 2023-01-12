@@ -385,7 +385,7 @@ export default class App extends Component {
 					setMode={this.setMode}
 					hardwareWallet={this.state.ledger || this.state.trezor}
 					isUnlocked={this.state.hdSeedE && this.state.encryptedPasswordHash}
-					setCollapsed={(value) => this.setState({ collapsed: value })}
+					setAppCollapsed={(value) => this.setState({ collapsed: value })}
 				/>
 				<MainContainer
 					collapsed={this.state.collapsed || window.innerWidth < 768}

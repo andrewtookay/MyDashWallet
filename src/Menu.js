@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -182,122 +182,108 @@ const FooterText = styled.div`
 	padding-right: 10px;
 `;
 
-export class Menu extends Component {
-	constructor(props) {
-		super(props);
-		this.state = { collapsed: window.innerWidth < 768 };
-	}
-	componentWillMount() {
-		document.addEventListener('mousedown', this.handleClick, false);
-	}
-	componentWillUnmount() {
-		document.removeEventListener('mousedown', this.handleClick, false);
-	}
-	toggleNavbar = () => {
-		this.props.setCollapsed(!this.state.collapsed);
-		this.setState({ collapsed: !this.state.collapsed });
+export const Menu = ({ setAppCollapsed, setMode, isUnlocked, onLogout }) => {
+	const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+
+	const toggleNavbar = () => {
+		setAppCollapsed(!collapsed);
+		setCollapsed(!collapsed);
 	};
 
-	render() {
-		var collapsed = this.state && this.state.collapsed;
-		return (
-			<Container collapsed={collapsed} ref={(menu) => (this.menu = menu)}>
-				<Logo collapsed={collapsed} onClick={() => this.props.setMode('')} />
-				<ToggleButton onClick={this.toggleNavbar} collapsed={collapsed} alt="Toggle collapse menu">
-					<FontAwesomeIcon icon={faBars} />
-					{!collapsed && <span>Menu</span>}
-				</ToggleButton>
-				<MenuElements collapsed={collapsed}>
-					<ul className={this.state.collapsed && 'd-flex flex-column'}>
-						<li>
-							<Link to="/" onClick={() => this.props.setMode('')}>
-								<FontAwesomeIcon icon={faWallet} />
-								<span>{!this.props.isUnlocked ? 'Open ' : ''}Wallet</span>
-							</Link>
-						</li>
-						{/*
+	return (
+		<Container collapsed={collapsed}>
+			<Logo collapsed={collapsed} onClick={() => setMode('')} />
+			<ToggleButton onClick={toggleNavbar} collapsed={collapsed} alt="Toggle collapse menu">
+				<FontAwesomeIcon icon={faBars} />
+				{!collapsed && <span>Menu</span>}
+			</ToggleButton>
+			<MenuElements collapsed={collapsed}>
+				<ul className={collapsed && 'd-flex flex-column'}>
+					<li>
+						<Link to="/" onClick={() => setMode('')}>
+							<FontAwesomeIcon icon={faWallet} />
+							<span>{!isUnlocked ? 'Open ' : ''}Wallet</span>
+						</Link>
+					</li>
+					{/*
 						<li>
 							<a href="https://old.mydashwallet.org/mixing">
 								<FontAwesomeIcon icon={faRandom} />
 								<span>Mix</span>
 							</a>
-							unused, and not very helpful <Link to="/mix" onClick={() => this.props.setMode('mix')}>
+							unused, and not very helpful <Link to="/mix" onClick={() => setMode('mix')}>
 								<FontAwesomeIcon icon={faRandom} />
 								<span>Mix</span>
 							</Link>
 						</li>
 						<li> TODO_ADOT_FUTURE implement tipping mechanism for light wallets
-							<Link to="/tip" onClick={() => this.props.setMode('tip')}>
+							<Link to="/tip" onClick={() => setMode('tip')}>
 								<FontAwesomeIcon icon={faGift} />
 								<span>Tip</span>
 							</Link>
 						</li>
 						TODO: implement on top of dash platform <li>
-							<Link to="/chat" onClick={() => this.props.setMode('chat')}>
+							<Link to="/chat" onClick={() => setMode('chat')}>
 								<FontAwesomeIcon icon={faComments} />
 								<span>Chat</span>
 							</Link>
 						</li>*/}
-						<li>
-							<Link to="/domains" onClick={() => this.props.setMode('domains')}>
-								<FontAwesomeIcon icon={faTags} />
-								<span>Domains</span>
-							</Link>
-						</li>
-						<li>
-							<Link to="/browser" onClick={() => this.props.setMode('browser')}>
-								<FontAwesomeIcon icon={faWindowRestore} />
-								<span>Browser</span>
-							</Link>
-						</li>
-						<li>
-							<Link to="/settings" onClick={() => this.props.setMode('settings')}>
-								<FontAwesomeIcon icon={faCog} />
-								<span>Settings</span>
-							</Link>
-						</li>
-						<li>
-							<Link to="/help" onClick={() => this.props.setMode('help')}>
-								<FontAwesomeIcon icon={faQuestion} />
-								<span>Help</span>
-							</Link>
-						</li>
-						{/*<li>
+					<li>
+						<Link to="/domains" onClick={() => setMode('domains')}>
+							<FontAwesomeIcon icon={faTags} />
+							<span>Domains</span>
+						</Link>
+					</li>
+					<li>
+						<Link to="/browser" onClick={() => setMode('browser')}>
+							<FontAwesomeIcon icon={faWindowRestore} />
+							<span>Browser</span>
+						</Link>
+					</li>
+					<li>
+						<Link to="/settings" onClick={() => setMode('settings')}>
+							<FontAwesomeIcon icon={faCog} />
+							<span>Settings</span>
+						</Link>
+					</li>
+					<li>
+						<Link to="/help" onClick={() => setMode('help')}>
+							<FontAwesomeIcon icon={faQuestion} />
+							<span>Help</span>
+						</Link>
+					</li>
+					{/*<li>
 							<a href="https://old.mydashwallet.org">
 								<FontAwesomeIcon icon={faSitemap} />
 								<span>Old Website</span>
 							</a>
 						</li>*/}
-						<li style={{ display: this.props.isUnlocked ? 'auto' : 'none' }}>
-							<Link to="/" onClick={() => this.props.onLogout()}>
-								<FontAwesomeIcon icon={faSignOutAlt} />
-								<span>Logout</span>
-							</Link>
-						</li>
-					</ul>
-				</MenuElements>
-				<Illustration collapsed={collapsed} />
-				<MenuFooter collapsed={collapsed}>
-					<div>
-						<a
-							href="https://discord.com/invite/86eTp6m7p9"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Discord_Default.png"
-								hoverImage="/images/SocialMediaIcon_Discord_Hover.png"
-								title="Alterdot Community on Discord"
-							/>
-						</a>
-						<a href="https://twitter.com/AlterdotNetwork" target="_blank" rel="noopener noreferrer">
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Twitter_Default.png"
-								hoverImage="/images/SocialMediaIcon_Twitter_Hover.png"
-								title="Twitter"
-							/>
-						</a>
-						{/*
+					<li style={{ display: isUnlocked ? 'auto' : 'none' }}>
+						<Link to="/" onClick={() => onLogout()}>
+							<FontAwesomeIcon icon={faSignOutAlt} />
+							<span>Logout</span>
+						</Link>
+					</li>
+				</ul>
+			</MenuElements>
+			<Illustration collapsed={collapsed} />
+			<MenuFooter collapsed={collapsed}>
+				<div>
+					<a href="https://discord.com/invite/86eTp6m7p9" target="_blank" rel="noopener noreferrer">
+						<SocialMediaIcon
+							image="/images/SocialMediaIcon_Discord_Default.png"
+							hoverImage="/images/SocialMediaIcon_Discord_Hover.png"
+							title="Alterdot Community on Discord"
+						/>
+					</a>
+					<a href="https://twitter.com/AlterdotNetwork" target="_blank" rel="noopener noreferrer">
+						<SocialMediaIcon
+							image="/images/SocialMediaIcon_Twitter_Default.png"
+							hoverImage="/images/SocialMediaIcon_Twitter_Hover.png"
+							title="Twitter"
+						/>
+					</a>
+					{/*
 						<a href="https://www.reddit.com/user/mydashwallet/comments/" target="_blank" rel="noopener noreferrer" >
 							<SocialMediaIcon
 								image="/images/SocialMediaIcon_Reddit_Default.png"
@@ -313,33 +299,32 @@ export class Menu extends Component {
 							/>
 						</a>
 						*/}
-						<a
-							href="https://github.com/Alterdot/web-wallet"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Github_Default.png"
-								hoverImage="/images/SocialMediaIcon_Github_Hover.png"
-								title="Open Source Code on GitHub"
-							/>
-						</a>
-						<a href="mailto:a.alterdot@gmail.com">
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Mail_Default.png"
-								hoverImage="/images/SocialMediaIcon_Mail_Hover.png"
-								title="Contact Support"
-							/>
-						</a>
-					</div>
-					<FooterText collapsed={collapsed}>&copy; 2023 Alterdot [ADOT] Developers</FooterText>
-					<FooterText collapsed={collapsed}>
-						<a href="/help" target="_blank" rel="noopener noreferrer">
-							Terms of Use
-						</a>
-					</FooterText>
-				</MenuFooter>
-			</Container>
-		);
-	}
-}
+					<a
+						href="https://github.com/Alterdot/web-wallet"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<SocialMediaIcon
+							image="/images/SocialMediaIcon_Github_Default.png"
+							hoverImage="/images/SocialMediaIcon_Github_Hover.png"
+							title="Open Source Code on GitHub"
+						/>
+					</a>
+					<a href="mailto:a.alterdot@gmail.com">
+						<SocialMediaIcon
+							image="/images/SocialMediaIcon_Mail_Default.png"
+							hoverImage="/images/SocialMediaIcon_Mail_Hover.png"
+							title="Contact Support"
+						/>
+					</a>
+				</div>
+				<FooterText collapsed={collapsed}>&copy; 2023 Alterdot [ADOT] Developers</FooterText>
+				<FooterText collapsed={collapsed}>
+					<a href="/help" target="_blank" rel="noopener noreferrer">
+						Terms of Use
+					</a>
+				</FooterText>
+			</MenuFooter>
+		</Container>
+	);
+};
