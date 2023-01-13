@@ -436,10 +436,8 @@ export default class App extends Component {
 							popupDialog={popupDialog}
 							isWalletAvailable={this.state.hdSeedE}
 							setMode={this.setMode}
-							isCorrectPasswordHash={this.isCorrectPasswordHash}
 							onLoginWallet={this.loginWallet}
 							onCreateWallet={this.createWallet}
-							onLoginHardwareWallet={this.loginHardwareWallet}
 							onLogout={this.logout}
 						/>
 					)}
