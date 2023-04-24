@@ -6,9 +6,8 @@ export const Transactions = (props) => {
 			<div id="transactions">
 				{transactions.map((tx) => {
 					var isConfirmed = tx.txlock || tx.confirmations > 0;
-					var confirmedClass = isConfirmed ? 'confirmed' : 'pending';
 					var sentReceivedClass = tx.amountChange > 0 ? 'sent' : 'received';
-					var combinedClass = `${confirmedClass} ${sentReceivedClass} tx-row`;
+					var combinedClass = `${sentReceivedClass} tx-row`;
 					return (
 						<div className={combinedClass} key={tx.id}>
 							<div className="colTx">
@@ -24,10 +23,10 @@ export const Transactions = (props) => {
 								</div>
 							</div>
 							<div className="colDate">
-								<span className="txDate">{tx.time.toLocaleDateString()}</span>{' '}
-								<span className="txTime">
-									{tx.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-								</span>
+								{isConfirmed ?
+									(<span>{`${tx.time.toLocaleDateString()} ${tx.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}</span>) :
+									(<span>Pending</span>)
+								}
 							</div>
 							<div className="colAlterdot" title={props.showAlterdotNumber(tx.amountChange)}>
 								{(tx.amountChange > 0 ? '+' : '') +
@@ -36,18 +35,6 @@ export const Transactions = (props) => {
 							<div className="colFiat">
 								{(tx.amountChange > 0 ? '+' : '') +
 									(tx.amountChange * props.getSelectedCurrencyAlterdotPrice()).toFixed(2)}
-							</div>
-							<div className="colConfirmations">
-								{
-									tx.confirmations +
-										(props.showNumber(tx.amountChange, fullSize ? 8 : 5) === '0'
-											? ' PrivateSend'
-											: tx.txlock
-											? ' InstantSend'
-											: isConfirmed
-											? ''
-											: ' Unconfirmed') /* TODO_ADOT_MEDIUM show confirmations, or not? */
-								}
 							</div>
 						</div>
 					);
@@ -74,7 +61,7 @@ export const Transactions = (props) => {
 				</div>
 			</div>
 			{renderAllTransactions(
-				props.transactions.slice(0, 50).sort((a, b) => b.time - a.time),
+				props.transactions.sort((a, b) => b.time - a.time),
 				true
 			)}
 		</div>
