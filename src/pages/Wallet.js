@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useEffect, useState, useRef } from 'react';
 import update from 'immutability-helper';
 import { Balances } from '../panels/Balances';
 import { Send } from '../panels/Send';
@@ -10,81 +10,81 @@ import { NotificationContainer, NotificationManager } from 'react-notifications'
 import 'react-notifications/lib/notifications.css';
 import * as constants from '../constants/network.js';
 
-export class Wallet extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			transactions: [],
-			skipInitialTransactionsNotifications: true,
-			scanWallet: false,
-			skipEmptyAddresses: false, // TODO_ADOT_MEDIUM not needed as we don't create new addresses continuously
-			password: props.rememberPassword || '',
-			lastAddress:
-				props.addressBalances && Object.keys(props.addressBalances).length > 0
-					? Object.keys(props.addressBalances)[0]
-					: '',
+export const Wallet = ({
+	addressBalances,
+	totalBalance,
+	updateBalanceAddressStorage,
+	showNumber,
+	explorer,
+	updateAddressBalances,
+	rememberPassword,
+	hdSeedE,
+	onDecrypt,
+	selectedCurrency,
+	priceEur,
+	priceGbp,
+	priceUsd,
+	popupDialog,
+	isCorrectPasswordHash,
+	setMode,
+}) => {
+	const [state, setState] = useState({
+		transactions: [],
+		scanWallet: false,
+		password: rememberPassword || '',
+		lastAddress:
+			addressBalances && Object.keys(addressBalances).length > 0
+				? Object.keys(addressBalances)[0]
+				: '',
+	});
+
+	const [lastAmountChange, setLastAmountChange] = useState();
+
+	const abortController = new AbortController();
+	const showPasswordDialog = useRef();
+
+	useEffect(() => {
+		let updateBalanceInterval = setInterval(() => balanceCheck(), 20000);
+
+		fillTransactions(Object.keys(addressBalances));
+
+		return () => {
+			clearInterval(updateBalanceInterval);
+			abortController.abort();
 		};
-		this.updatingBalanceController = new window.AbortController();
-		var component = this;
-		this.skipInitialTxInterval = setTimeout(() => {
-			component.setState({ skipInitialTransactionsNotifications: false });
-		}, 11873);
-		this.skipEmptyAddressesInterval = setTimeout(() => {
-			// Only check empty old addresses after 1 minute, then they are not longer checked
-			component.setState({ skipEmptyAddresses: false });
-		}, 70000);
-	}
+	});
 
-	componentDidMount() {
-		var component = this;
-		this.updateBalanceInterval = setInterval(() => component.balanceCheck(), 20000);
-		this.fillTransactions(Object.keys(this.props.addressBalances));
-	}
+	useEffect(() => {
+		fillTransactions(Object.keys(addressBalances));
+		setState({
+			...state,
+			lastAddress: Object.keys(addressBalances)[Object.keys(addressBalances).length - 1],
+		});
+	}, [Object.keys(addressBalances).length]);
 
-	componentDidUpdate(prevProps) {
-		let sizeAddressBalances = Object.keys(this.props.addressBalances).length;
-		let prevSizeAddressBalances = Object.keys(prevProps.addressBalances).length;
-
-		if (sizeAddressBalances !== prevSizeAddressBalances) {
-			this.fillTransactions(Object.keys(this.props.addressBalances));
-			this.setState({
-				lastAddress: Object.keys(this.props.addressBalances)[sizeAddressBalances - 1],
-			});
-		}
-	}
-
-	componentWillUnmount() {
-		clearInterval(this.skipInitialTxInterval);
-		clearInterval(this.skipEmptyAddressesInterval);
-		clearInterval(this.updateBalanceInterval);
-		if (this.updatingBalanceController) this.updatingBalanceController.abort();
-	}
-
-	addTransaction = (tx) => {
+	const addTransaction = (tx) => {
 		// If we already got this tx, there is nothing we need to do, new ones are just added on top
-		for (var existingTx of this.state.transactions) if (existingTx.id === tx.id) return;
+		for (var existingTx of state.transactions) if (existingTx.id === tx.id) return;
 		// Must be updated with state, see https://jsbin.com/mofekakuqi/7/edit?js,output
-		this.setState((state) => update(state, { transactions: { $push: [tx] } }));
-		if (
-			!this.state.skipInitialTransactionsNotifications &&
-			tx.amountChange > 0 &&
-			tx.amountChange !== this.lastAmountChange
-		) {
-			this.lastAmountChange = tx.amountChange;
+		setState((state) => update(state, { transactions: { $push: [tx] } }));
+		if (tx.amountChange > 0 && tx.amountChange !== lastAmountChange) {
+			setLastAmountChange(tx.amountChange);
 			NotificationManager.warning(
 				'Incoming transaction',
-				'+' + this.showAlterdotNumber(tx.amountChange)
+				'+' + showAlterdotNumber(tx.amountChange)
 			);
 		}
 	};
 
-	showAlterdotNumber = (amount) => {
-		return this.props.showNumber(amount, 8) + ' ADOT';
+	const showAlterdotNumber = (amount) => {
+		return showNumber(amount, 8) + ' ADOT';
 	};
 
-	fillTransactionFromAddress = (address) => {
+	const fillTransactionFromAddress = (address) => {
 		// TODO_ADOT_HIGH get transactions from all addresses in one request, can be paginated
-		fetch('https://' + this.props.explorer + '/insight-api/txs/?address=' + address, {
+		// move the transactions state to the Transactions component
+		// unconfirmed transactions will have a separate array that sits here or just reload transactions after successful send
+		fetch('https://' + explorer + '/insight-api/txs/?address=' + address, {
 			mode: 'cors',
 			cache: 'no-cache',
 		})
@@ -97,13 +97,12 @@ export class Wallet extends Component {
 					var amountChange = 0;
 					const vin = tx['vin'];
 					for (var i = 0; i < vin.length; i++)
-						if (this.isOwnAddress(vin[i]['addr'], address))
-							amountChange -= parseFloat(vin[i]['value']);
+						if (isOwnAddress(vin[i]['addr'], address)) amountChange -= parseFloat(vin[i]['value']);
 					const vout = tx['vout'];
 					for (var j = 0; j < vout.length; j++)
-						if (this.isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
+						if (isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
 							amountChange += parseFloat(vout[j]['value']);
-					this.addTransaction({
+					addTransaction({
 						id: tx.txid,
 						amountChange: amountChange,
 						time: time,
@@ -115,31 +114,35 @@ export class Wallet extends Component {
 				}
 			});
 	};
-	isOwnAddress = (addressToCheck, sendAddress) => {
+
+	const isOwnAddress = (addressToCheck, sendAddress) => {
 		if (addressToCheck === sendAddress) return true;
-		return Object.keys(this.props.addressBalances).includes(addressToCheck);
+		return Object.keys(addressBalances).includes(addressToCheck);
 	};
-	fillTransactions = (addresses) => {
-		for (var address of addresses) this.fillTransactionFromAddress(address);
+
+	const fillTransactions = (addresses) => {
+		for (var address of addresses) fillTransactionFromAddress(address);
 	};
+
 	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
-	balanceCheck = () => {
-		for (var addressToCheck of Object.keys(this.props.addressBalances))
-			if (this.isValidAlterdotAddress(addressToCheck)) {
-				this.updateAddressBalance(addressToCheck);
-				this.fillTransactionFromAddress(addressToCheck);
+	const balanceCheck = () => {
+		for (var addressToCheck of Object.keys(addressBalances))
+			if (isValidAlterdotAddress(addressToCheck)) {
+				updateAddressBalance(addressToCheck);
+				fillTransactionFromAddress(addressToCheck);
 			}
 	};
-	isValidAlterdotAddress = (address) => {
+
+	const isValidAlterdotAddress = (address) => {
 		// TODO_ADOT_MEDIUM extract common utility functions
 		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
 	};
-	updateAddressBalance = (addressToCheck) => {
-		var component = this;
-		fetch('https://' + this.props.explorer + '/insight-api/addr/' + addressToCheck, {
+
+	const updateAddressBalance = (addressToCheck) => {
+		fetch('https://' + explorer + '/insight-api/addr/' + addressToCheck, {
 			mode: 'cors',
 			cache: 'no-cache',
-			signal: this.updatingBalanceController.signal,
+			signal: abortController.signal,
 		})
 			.then((response) => response.json())
 			.then((data) => {
@@ -154,57 +157,41 @@ export class Wallet extends Component {
 
 					var addressBalance = {};
 					addressBalance[addressToCheck] = newBalance;
-					component.props.updateAddressBalances(addressBalance);
+					updateAddressBalances(addressBalance);
 				}
 			})
 			.catch((error) => console.log(error));
 	};
-	addLastAddress = (lastAddress) => {
+
+	const addLastAddress = (lastAddress) => {
 		var lastAddressBalance = {};
 		lastAddressBalance[lastAddress] = 0;
-		this.props.updateAddressBalances(lastAddressBalance);
-		this.setState({ lastAddress: lastAddress });
+		updateAddressBalances(lastAddressBalance);
+		setState({ ...state, lastAddress: lastAddress });
 	};
-	fillTransactionFromId = (txId, txIndex) => {
-		if (!txId) return;
-		fetch('https://' + this.props.explorer + '/insight-api/tx/' + txId, {
-			mode: 'cors',
-			cache: 'no-cache',
-		})
-			.then((response) => response.json())
-			.then((tx) => {
-				this.addTransaction({
-					id: txId,
-					amountChange: parseFloat(tx.vout[txIndex]['value']),
-					time: new Date(tx['time'] * 1000),
-					confirmations: tx.confirmations,
-					size: tx.size,
-					fees: tx.fees,
-					txlock: tx.txlock,
-				});
-			});
-	};
-	getUnusedAddress = () => {
-		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
-			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password);
+
+	const getUnusedAddress = () => {
+		if (state.password && state.password.length >= 8 && hdSeedE) {
+			var hdS = onDecrypt(hdSeedE, state.password);
 			if (hdS === '')
 				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!';
 			var mnemonic = new Mnemonic(hdS);
 			var xpriv = mnemonic.toHDPrivateKey();
 			var lastAddress = xpriv
-				.derive("m/44'/5'/0'/0/" + Object.keys(this.props.addressBalances).length)
+				.derive("m/44'/5'/0'/0/" + Object.keys(addressBalances).length)
 				.privateKey.toAddress()
 				.toString();
-			this.addLastAddress(lastAddress);
+			addLastAddress(lastAddress);
 		} else {
-			this.showPasswordDialog.show();
+			showPasswordDialog.current.show();
 		}
 	};
-	scanWalletAddresses = (numberAddresses) => {
+
+	const scanWalletAddresses = (numberAddresses) => {
 		var walletAddresses = {};
 
-		if (this.state.password && this.state.password.length >= 8 && this.props.hdSeedE) {
-			var hdS = this.props.onDecrypt(this.props.hdSeedE, this.state.password);
+		if (state.password && state.password.length >= 8 && hdSeedE) {
+			var hdS = onDecrypt(hdSeedE, state.password);
 			if (hdS === '')
 				return 'Unable to obtain unused address, the wallet seed cannot be reconstructed!';
 			var mnemonic = new Mnemonic(hdS);
@@ -218,25 +205,23 @@ export class Wallet extends Component {
 				walletAddresses[nextAddress] = 0;
 			}
 
-			this.props.updateAddressBalances(walletAddresses);
-			this.setState({ scanWallet: false });
-			setTimeout(this.balanceCheck, 1000); // necessary delay as setting the state is async
+			updateAddressBalances(walletAddresses);
+			setState({ ...state, scanWallet: false });
+			setTimeout(balanceCheck, 1000); // necessary delay as setting the state is async
 		} else {
-			this.setState({ scanWallet: true });
-			this.showPasswordDialog.show();
+			setState({ ...state, scanWallet: true });
+			showPasswordDialog.current.show();
 		}
 	};
-	getSelectedCurrencyAlterdotPrice = () => {
-		return this.props.selectedCurrency === 'EUR'
-			? this.props.priceEur
-			: this.props.selectedCurrency === 'GBP'
-			? this.props.priceGbp
-			: this.props.priceUsd;
+
+	const getSelectedCurrencyAlterdotPrice = () => {
+		return selectedCurrency === 'EUR' ? priceEur : selectedCurrency === 'GBP' ? priceGbp : priceUsd;
 	};
-	getPrivateSendBalance = () => {
+
+	const getPrivateSendBalance = () => {
 		var mixedAmount = 0;
-		for (var key of Object.keys(this.props.addressBalances)) {
-			var amount = this.props.addressBalances[key];
+		for (var key of Object.keys(addressBalances)) {
+			var amount = addressBalances[key];
 			// check for supported denominations
 			if (
 				amount === 0.00100001 ||
@@ -249,103 +234,100 @@ export class Wallet extends Component {
 		}
 		return mixedAmount.toFixed(8);
 	};
-	render() {
-		return (
-			<div id="main" className="main_dashboard_otr">
-				<h1>Wallet</h1>
-				<div className="main-left">
-					<Send
-						explorer={this.props.explorer}
-						popupDialog={this.props.popupDialog}
-						addressBalances={this.props.addressBalances}
-						hdSeedE={this.props.hdSeedE}
-						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.props.selectedCurrency}
-						isCorrectPasswordHash={this.props.isCorrectPasswordHash}
-						getUnusedAddress={this.getUnusedAddress}
-						totalBalance={this.props.totalBalance}
-						addresses={Object.keys(this.props.addressBalances)}
-						showNumber={this.props.showNumber}
-						showAlterdotNumber={this.showAlterdotNumber}
-						onDecrypt={this.props.onDecrypt}
-						addTransaction={this.addTransaction}
-						setRememberedPassword={(rememberPassword) =>
-							this.setState({ password: rememberPassword })
-						}
-						balanceCheck={this.balanceCheck}
-						isValidAlterdotAddress={this.isValidAlterdotAddress}
-						updateBalanceAddressStorage={this.props.updateBalanceAddressStorage}
-					/>
-					<Transactions
-						explorer={this.props.explorer}
-						transactions={this.state.transactions}
-						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.props.selectedCurrency}
-						showAlterdotNumber={this.showAlterdotNumber}
-						showNumber={this.props.showNumber}
-					/>
-				</div>
-				<div className="main-right">
-					<Balances
-						totalBalance={this.props.totalBalance}
-						privateSendBalance={this.getPrivateSendBalance()}
-						showNumber={this.props.showNumber}
-						setMode={this.props.setMode}
-						getSelectedCurrencyAlterdotPrice={this.getSelectedCurrencyAlterdotPrice}
-						selectedCurrency={this.props.selectedCurrency}
-					/>
-					<Receive
-						explorer={this.props.explorer}
-						lastAddress={this.state.lastAddress}
-						getUnusedAddress={this.getUnusedAddress}
-						scanWalletAddresses={this.scanWalletAddresses}
-						addressBalances={this.props.addressBalances}
-						reversedAddresses={Object.keys(this.props.addressBalances).slice().reverse()}
-						showAlterdotNumber={this.showAlterdotNumber}
-					/>
-				</div>
-				<div className="circle1"></div> {/* TODO_ADOT_MEDIUM move to background */}
-				<div className="circle2"></div>
-				<div className="circle3"></div>
-				<SkyLight
-					dialogStyles={this.props.popupDialog}
-					hideOnOverlayClicked
-					ref={(ref) => (this.showPasswordDialog = ref)}
-					title="Enter your password"
-				>
-					<p className="mt-3 mb-1">
-						Your password is required to generate or scan wallet addresses.
-					</p>
-					<input
-						type="password"
-						autoFocus={true}
-						style={{ borderBottom: '1px solid gray', fontSize: '16px' }}
-						value={this.state.password}
-						onChange={(e) => this.setState({ password: e.target.value })}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter') {
-								this.onEnteredPassword();
-							}
-						}}
-					/>
-					<button
-						className="mt-3"
-						onClick={() => {
-							this.onEnteredPassword();
-						}}
-					>
-						Ok
-					</button>
-				</SkyLight>
-				<NotificationContainer />
+
+	const onEnteredPassword = () => {
+		showPasswordDialog.current.hide();
+
+		if (state.scanWallet) scanWalletAddresses(10);
+		else getUnusedAddress();
+	};
+
+	return (
+		<div id="main" className="main_dashboard_otr">
+			<h1>Wallet</h1>
+			<div className="main-left">
+				<Send
+					explorer={explorer}
+					popupDialog={popupDialog}
+					addressBalances={addressBalances}
+					hdSeedE={hdSeedE}
+					getSelectedCurrencyAlterdotPrice={getSelectedCurrencyAlterdotPrice}
+					selectedCurrency={selectedCurrency}
+					isCorrectPasswordHash={isCorrectPasswordHash}
+					getUnusedAddress={getUnusedAddress}
+					totalBalance={totalBalance}
+					addresses={Object.keys(addressBalances)}
+					showNumber={showNumber}
+					showAlterdotNumber={showAlterdotNumber}
+					onDecrypt={onDecrypt}
+					addTransaction={addTransaction}
+					setRememberedPassword={(rememberPassword) =>
+						setState({ ...state, password: rememberPassword })
+					}
+					balanceCheck={balanceCheck}
+					isValidAlterdotAddress={isValidAlterdotAddress}
+					updateBalanceAddressStorage={updateBalanceAddressStorage}
+				/>
+				<Transactions
+					explorer={explorer}
+					transactions={state.transactions}
+					getSelectedCurrencyAlterdotPrice={getSelectedCurrencyAlterdotPrice}
+					selectedCurrency={selectedCurrency}
+					showAlterdotNumber={showAlterdotNumber}
+					showNumber={showNumber}
+				/>
 			</div>
-		);
-	}
-
-	onEnteredPassword() {
-		this.showPasswordDialog.hide();
-
-		if (this.state.scanWallet) this.scanWalletAddresses(10);
-		else this.getUnusedAddress();
-	}
-}
+			<div className="main-right">
+				<Balances
+					totalBalance={totalBalance}
+					privateSendBalance={getPrivateSendBalance()}
+					showNumber={showNumber}
+					setMode={setMode}
+					getSelectedCurrencyAlterdotPrice={getSelectedCurrencyAlterdotPrice}
+					selectedCurrency={selectedCurrency}
+				/>
+				<Receive
+					explorer={explorer}
+					lastAddress={state.lastAddress}
+					getUnusedAddress={getUnusedAddress}
+					scanWalletAddresses={scanWalletAddresses}
+					addressBalances={addressBalances}
+					reversedAddresses={Object.keys(addressBalances).slice().reverse()}
+					showAlterdotNumber={showAlterdotNumber}
+				/>
+			</div>
+			<div className="circle1"></div> {/* TODO_ADOT_MEDIUM move to background */}
+			<div className="circle2"></div>
+			<div className="circle3"></div>
+			<SkyLight
+				dialogStyles={popupDialog}
+				hideOnOverlayClicked
+				ref={showPasswordDialog}
+				title="Enter your password"
+			>
+				<p className="mt-3 mb-1">Your password is required to generate or scan wallet addresses.</p>
+				<input
+					type="password"
+					autoFocus={true}
+					style={{ borderBottom: '1px solid gray', fontSize: '16px' }}
+					value={state.password}
+					onChange={(e) => setState({ ...state, password: e.target.value })}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter') {
+							onEnteredPassword();
+						}
+					}}
+				/>
+				<button
+					className="mt-3"
+					onClick={() => {
+						onEnteredPassword();
+					}}
+				>
+					Ok
+				</button>
+			</SkyLight>
+			<NotificationContainer />
+		</div>
+	);
+};
