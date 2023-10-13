@@ -1,5 +1,4 @@
 ﻿import React, { useEffect, useState, useRef } from 'react';
-import update from 'immutability-helper';
 import { Balances } from '../panels/Balances';
 import { Send } from '../panels/Send';
 import { Receive } from '../panels/Receive';
@@ -28,8 +27,8 @@ export const Wallet = ({
 	isCorrectPasswordHash,
 	setMode,
 }) => {
+	const [transactions, setTransactions] = useState([]);
 	const [state, setState] = useState({
-		transactions: [],
 		scanWallet: false,
 		password: rememberPassword || '',
 		lastAddress:
@@ -40,39 +39,58 @@ export const Wallet = ({
 
 	const [lastAmountChange, setLastAmountChange] = useState();
 
-	const abortController = new AbortController();
 	const showPasswordDialog = useRef();
+	const abortController = useRef(new AbortController());
+	const initialBalanceCheckHasRun = useRef(false);
+	const displayIncomingTxNotification = useRef(false);
 
 	useEffect(() => {
-		let updateBalanceInterval = setInterval(() => balanceCheck(), 20000);
-
-		fillTransactions(Object.keys(addressBalances));
+		const balanceCheckInterval = setInterval(() => balanceCheck(), 60000);
 
 		return () => {
-			clearInterval(updateBalanceInterval);
-			abortController.abort();
+			clearInterval(balanceCheckInterval);
 		};
-	});
+	}, [transactions, Object.keys(addressBalances).length]);
 
 	useEffect(() => {
-		fillTransactions(Object.keys(addressBalances));
-		setState({
-			...state,
-			lastAddress: Object.keys(addressBalances)[Object.keys(addressBalances).length - 1],
-		});
+		return () => {
+			abortController.current.abort();
+		}
+	}, []);
+
+	useEffect(() => {
+		console.log(transactions);
+	}, [transactions]);
+
+	useEffect(() => {
+		if (Object.keys(addressBalances).length > 0) {
+			if (initialBalanceCheckHasRun.current === false) {
+				balanceCheck();
+				initialBalanceCheckHasRun.current = true;
+			} else {
+				fillTransactionsFromAddresses([Object.keys(addressBalances)[Object.keys(addressBalances).length - 1]]);
+				setState({
+					...state,
+					lastAddress: Object.keys(addressBalances)[Object.keys(addressBalances).length - 1],
+				});
+			}
+		}
 	}, [Object.keys(addressBalances).length]);
 
 	const addTransaction = (tx) => {
-		// If we already got this tx, there is nothing we need to do, new ones are just added on top
-		for (var existingTx of state.transactions) if (existingTx.id === tx.id) return;
-		// Must be updated with state, see https://jsbin.com/mofekakuqi/7/edit?js,output
-		setState((state) => update(state, { transactions: { $push: [tx] } }));
+		// If we already have this tx, there is nothing to do, new ones are added on top
+		for (var existingTx of transactions) if (existingTx.id === tx.id) return;
+		setTransactions((prevTransactions) => [tx, ...prevTransactions]);
+
 		if (tx.amountChange > 0 && tx.amountChange !== lastAmountChange) {
 			setLastAmountChange(tx.amountChange);
-			NotificationManager.warning(
-				'Incoming transaction',
-				'+' + showAlterdotNumber(tx.amountChange)
-			);
+
+			if (displayIncomingTxNotification.current === true) {
+				NotificationManager.warning(
+					'Incoming transaction',
+					'+' + showAlterdotNumber(tx.amountChange)
+				);
+			}
 		}
 	};
 
@@ -80,28 +98,37 @@ export const Wallet = ({
 		return showNumber(amount, 8) + ' ADOT';
 	};
 
-	const fillTransactionFromAddress = (address) => {
-		// TODO_ADOT_HIGH get transactions from all addresses in one request, can be paginated
-		// move the transactions state to the Transactions component
+	const fillTransactionsFromAddresses = (addresses) => {
+		fillTransactionsFromAddressesFromTo(addresses, 0, 50);
+	}
+
+	const fillTransactionsFromAddressesFromTo = (addresses, from, to) => {
+		// TODO_ADOT_LOW maybe move the transactions state to the Transactions component?
 		// unconfirmed transactions will have a separate array that sits here or just reload transactions after successful send
-		fetch('https://' + explorer + '/insight-api/txs/?address=' + address, {
+		fetch(`https://${explorer}/insight-api/addrs/txs`, {
+			method: 'POST',
 			mode: 'cors',
 			cache: 'no-cache',
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ addrs: addresses.join(","), from: from, to: to }),
+			signal: abortController.current.signal
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				const txs = data.txs;
-				for (var index = 0; index < txs.length; index++) {
-					const tx = txs[index];
-					var time = new Date(tx['time'] * 1000);
-					var amountChange = 0;
+				for (const tx of data.items) {
+					const time = new Date(tx['time'] * 1000);
 					const vin = tx['vin'];
+
+					var amountChange = 0;
 					for (var i = 0; i < vin.length; i++)
-						if (isOwnAddress(vin[i]['addr'], address)) amountChange -= parseFloat(vin[i]['value']);
+						if (isOwnAddress(vin[i]['addr'], addresses)) amountChange -= parseFloat(vin[i]['value']);
 					const vout = tx['vout'];
 					for (var j = 0; j < vout.length; j++)
-						if (isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], address))
+						if (isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], addresses))
 							amountChange += parseFloat(vout[j]['value']);
+
 					addTransaction({
 						id: tx.txid,
 						amountChange: amountChange,
@@ -112,25 +139,23 @@ export const Wallet = ({
 						txlock: tx.txlock,
 					});
 				}
+
+				if (data.totalItems > to) {
+					fillTransactionsFromAddressesFromTo(addresses, from + 50, to + 50);
+				} else {
+					displayIncomingTxNotification.current = true;
+				}
 			});
 	};
 
-	const isOwnAddress = (addressToCheck, sendAddress) => {
-		if (addressToCheck === sendAddress) return true;
-		return Object.keys(addressBalances).includes(addressToCheck);
-	};
-
-	const fillTransactions = (addresses) => {
-		for (var address of addresses) fillTransactionFromAddress(address);
+	const isOwnAddress = (addressToCheck, addresses) => {
+		return addresses.includes(addressToCheck) || Object.keys(addressBalances).includes(addressToCheck);
 	};
 
 	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
 	const balanceCheck = () => {
-		for (var addressToCheck of Object.keys(addressBalances))
-			if (isValidAlterdotAddress(addressToCheck)) {
-				updateAddressBalance(addressToCheck);
-				fillTransactionFromAddress(addressToCheck);
-			}
+		updateBalances(Object.keys(addressBalances));
+		fillTransactionsFromAddresses(Object.keys(addressBalances));
 	};
 
 	const isValidAlterdotAddress = (address) => {
@@ -138,29 +163,32 @@ export const Wallet = ({
 		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
 	};
 
-	const updateAddressBalance = (addressToCheck) => {
-		fetch('https://' + explorer + '/insight-api/addr/' + addressToCheck, {
-			mode: 'cors',
-			cache: 'no-cache',
-			signal: abortController.signal,
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				if (data && !isNaN(data.balance)) {
-					var newBalance = parseFloat(data.balance);
-
-					if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance);
-
-					console.log('Balance of ' + addressToCheck + ': ' + newBalance);
-					// Exclude any masternode amounts TODO_ADOT_HIGH exclusion for MNs
-					if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0;
-
-					var addressBalance = {};
-					addressBalance[addressToCheck] = newBalance;
-					updateAddressBalances(addressBalance);
-				}
+	const updateBalances = (addresses) => {
+		addresses.map(address => {
+			// TODO_ADOT_HIGH too expensive
+			fetch(`https://${explorer}/insight-api/addr/${address}`, {
+				mode: 'cors',
+				cache: 'no-cache',
+				signal: abortController.current.signal,
 			})
-			.catch((error) => console.log(error));
+				.then((response) => response.json())
+				.then((data) => {
+					if (data && !isNaN(data.balance)) {
+						var newBalance = parseFloat(data.balance);
+
+						if (!isNaN(data.unconfirmedBalance)) newBalance += parseFloat(data.unconfirmedBalance);
+
+						console.log(`Balance of ${address} is ${newBalance}`);
+						// Exclude any masternode amounts TODO_ADOT_HIGH exclusion for MNs
+						if (newBalance < constants.DUST_AMOUNT_IN_ADOT) newBalance = 0;
+
+						var addressBalance = {};
+						addressBalance[address] = newBalance;
+						updateAddressBalances(addressBalance);
+					}
+				})
+				.catch((error) => console.log(error));
+		});
 	};
 
 	const addLastAddress = (lastAddress) => {
@@ -270,7 +298,7 @@ export const Wallet = ({
 				/>
 				<Transactions
 					explorer={explorer}
-					transactions={state.transactions}
+					transactions={transactions}
 					getSelectedCurrencyAlterdotPrice={getSelectedCurrencyAlterdotPrice}
 					selectedCurrency={selectedCurrency}
 					showAlterdotNumber={showAlterdotNumber}
