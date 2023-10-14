@@ -185,7 +185,7 @@ export const Wallet = ({
 	};
 
 	const updateBalances = (addresses) => {
-		addresses.map(address => {
+		addresses.forEach(address => {
 			// TODO_ADOT_HIGH too expensive, implement getAddressBalance with balance for each address in core
 			fetch(`https://${explorer}/insight-api/addr/${address}`, {
 				mode: 'cors',

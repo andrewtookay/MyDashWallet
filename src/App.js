@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Menu } from './Menu';
 import { Domains } from './pages/Domains';
 import { Help } from './pages/Help';
@@ -7,7 +7,6 @@ import { Wallet } from './pages/Wallet';
 import { Login } from './pages/Login';
 import CryptoJS from 'crypto-js';
 import { Mnemonic } from 'alterdot-lib';
-import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import './all.css';
 import { ADOT_PER_DUFF } from './constants/constants.js';
@@ -59,23 +58,23 @@ const Loader = styled.div`
 	padding-left: 25px;
 `;
 
-export default class App extends Component {
-	constructor(props) {
-		super(props);
+function App() {
+	const [state, setState] = useState(() => {
 		var lastLoginTime = localStorage.getItem('lastLoginTime');
 		var encryptedPasswordHash = localStorage.getItem('encryptedPasswordHash');
 		var hdSeedE = localStorage.getItem('hdSeedE');
 
 		var yesterday = new Date();
 		yesterday.setDate(yesterday.getDate() - 1);
-		// Max. keep cache 24 hours!
+
+		// Keep cache maximum 24 hours!
 		if (
 			lastLoginTime &&
 			new Date(parseInt(lastLoginTime)) > yesterday &&
 			encryptedPasswordHash &&
 			hdSeedE
 		) {
-			this.state = {
+			return {
 				selectedCurrency: 'USD',
 				priceUsd: 0.02,
 				priceEur: 0.018,
@@ -86,12 +85,12 @@ export default class App extends Component {
 				encryptedPasswordHash: encryptedPasswordHash,
 				hdSeedE: hdSeedE,
 				loading: false,
-				mode: this.getModeFromUrl(),
+				mode: getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
 				explorer: 'insight.alterdot.network',
 			};
 		} else
-			this.state = {
+			return {
 				selectedCurrency: 'USD',
 				priceUsd: 0.02,
 				priceEur: 0.018,
@@ -100,43 +99,49 @@ export default class App extends Component {
 				addressBalances: {},
 				totalBalance: 0,
 				hdSeedE: hdSeedE, // allows login from stored encrypted seed, password is unknown so it must match the hash
-				mode: this.getModeFromUrl(),
+				mode: getModeFromUrl(),
 				collapsed: window.innerWidth < 768,
 				explorer: 'insight.alterdot.network',
 			};
+	});
 
+	useEffect(() => {
 		window.onpopstate = () => {
-			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl());
+			if (state.mode !== getModeFromUrl()) setMode(getModeFromUrl());
 		};
 		window.onpushstate = () => {
-			if (this.state.mode !== this.getModeFromUrl()) this.setMode(this.getModeFromUrl());
+			if (state.mode !== getModeFromUrl()) setMode(getModeFromUrl());
 		};
-		ReactGA.initialize('UA-25232431-3');
-		ReactGA.pageview('/');
-	}
-	componentDidMount = () => {
-		this.restoreAddressesAndTotalBalance();
-	};
-	updateLocalStorageAddressesAndTotalBalance = () => {
+
+		restoreAddressesAndTotalBalance();
+
+		return () => {
+			window.onpopstate = null;
+			window.onpushstate = null;
+		}
+	}, []);
+
+	const updateLocalStorageAddressesAndTotalBalance = () => {
 		var totalAmount = 0;
 		var cachedText = '';
-		for (var address of Object.keys(this.state.addressBalances))
-			if (this.isValidAlterdotAddress(address)) {
-				var amount = this.state.addressBalances[address];
+		for (var address of Object.keys(state.addressBalances))
+			if (isValidAlterdotAddress(address)) {
+				var amount = state.addressBalances[address];
 				totalAmount += amount;
 				cachedText += address + '|' + amount + '|';
 			}
 		localStorage.setItem('addressBalances', cachedText);
-		if (parseFloat(totalAmount.toFixed(8)) !== this.state.totalBalance)
+		if (parseFloat(totalAmount.toFixed(8)) !== state.totalBalance)
 			console.log(
 				'Calculated total balance of addresses different from state.',
 				totalAmount.toFixed(8),
-				this.state.totalBalance
+				state.totalBalance
 			);
 		localStorage.setItem('totalBalance', totalAmount.toFixed(8));
 	};
+
 	// TODO_ADOT_HIGH move to constructor
-	restoreAddressesAndTotalBalance = () => {
+	const restoreAddressesAndTotalBalance = () => {
 		// Check if we were on this address the last time too, then we can use cached data
 		var cachedAddressBalances = localStorage.getItem('addressBalances');
 		var cachedTotalBalance = localStorage.getItem('totalBalance');
@@ -163,12 +168,13 @@ export default class App extends Component {
 				'cachedTotalBalance',
 				cachedTotalBalance
 			);
-		this.setState({ addressBalances: restoredAddressBalances, totalBalance: restoredTotalBalance });
+		setState({ ...state, addressBalances: restoredAddressBalances, totalBalance: restoredTotalBalance });
 		// TODO_ADOT_HIGH updateBalanceInterval = setInterval(() => balanceCheck(), 20000);
 	};
+
 	// TODO_ADOT_LOW might become expensive for many addresses with a lot of activity
-	updateAddressBalances = (newAddressBalances) => {
-		this.setState((prevState) => {
+	const updateAddressBalances = (newAddressBalances) => {
+		setState((prevState) => {
 			let addressBalances = Object.assign({}, prevState.addressBalances);
 			let totalBalance = prevState.totalBalance;
 			// TODO_ADOT_MEDIUM check for negative values
@@ -179,15 +185,17 @@ export default class App extends Component {
 				addressBalances[address] = newAddressBalances[address];
 			}
 			totalBalance = parseFloat(totalBalance.toFixed(8));
-			return { addressBalances: addressBalances, totalBalance: totalBalance };
+			return { ...prevState, addressBalances: addressBalances, totalBalance: totalBalance };
 		});
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
-		this.updateLocalStorageAddressesAndTotalBalance(); // TODO_ADOT_HIGH do on interval
+		updateLocalStorageAddressesAndTotalBalance(); // TODO_ADOT_HIGH do on interval
 	};
-	isValidAlterdotAddress = (address) => {
+
+	const isValidAlterdotAddress = (address) => {
 		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
 	};
-	getModeFromUrl = () => {
+
+	function getModeFromUrl() {
 		return window.location.href.endsWith('domains')
 			? 'domains'
 			: window.location.href.endsWith('browser')
@@ -196,23 +204,26 @@ export default class App extends Component {
 					? 'help'
 					: '';
 	};
-	setMode = (newMode) => {
-		if (this.state.mode === newMode) return;
-		this.setState({ mode: newMode });
+
+	const setMode = (newMode) => {
+		if (state.mode === newMode) return;
+		setState({ ...state, mode: newMode });
 		if (!window.location.href.endsWith(newMode))
 			window.history.replaceState(null, 'MyAlterdotWallet - ' + newMode, newMode);
-		ReactGA.pageview('/' + newMode);
 	};
-	loginWallet = (password) => {
-		if (!this.state.hdSeedE) return 'No wallet available to unlock!';
-		var encryptedPasswordHash = this.getEncryptedPasswordHash(password);
-		var decrypted = this.decrypt(this.state.hdSeedE, password);
+
+	const loginWallet = (password) => {
+		if (!state.hdSeedE) return 'No wallet available to unlock!';
+		var encryptedPasswordHash = getEncryptedPasswordHash(password);
+		var decrypted = decrypt(state.hdSeedE, password);
 		if (!decrypted) return 'Invalid wallet password!';
 		var mnemonic = new Mnemonic(decrypted);
 		var xpriv = mnemonic.toHDPrivateKey();
 		var addressBalances = {};
 		addressBalances[xpriv.derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()] = 0;
-		this.setState({
+
+		setState({
+			...state,
 			ledger: undefined,
 			trezor: undefined,
 			encryptedPasswordHash: encryptedPasswordHash,
@@ -222,21 +233,24 @@ export default class App extends Component {
 			rememberPassword: password,
 		});
 
-		this.restoreAddressesAndTotalBalance();
+		restoreAddressesAndTotalBalance();
 
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('encryptedPasswordHash', encryptedPasswordHash);
-		this.updateLocalStorageAddressesAndTotalBalance();
+		updateLocalStorageAddressesAndTotalBalance();
 	};
-	getEncryptedPasswordHash = (password) => {
+
+	const getEncryptedPasswordHash = (password) => {
 		// The password is never stored, we derive it and only check if the hash is equal
-		var passwordHash = this.deriveHash(password);
-		return this.encrypt(passwordHash, '9ADE0896B2594184BA36E757C8E6EFD7');
+		var passwordHash = deriveHash(password);
+		return encrypt(passwordHash, '9ADE0896B2594184BA36E757C8E6EFD7');
 	};
-	deriveHash = (password) => {
+
+	const deriveHash = (password) => {
 		return CryptoJS.SHA256(password).toString();
 	};
-	encrypt = (text, key) => {
+
+	const encrypt = (text, key) => {
 		try {
 			var iv = CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9');
 			var cfg = { mode: CryptoJS.mode.CBC, iv: iv, padding: CryptoJS.pad.Pkcs7 };
@@ -247,7 +261,8 @@ export default class App extends Component {
 			return '';
 		}
 	};
-	decrypt = (encryptedData, key) => {
+
+	const decrypt = (encryptedData, key) => {
 		try {
 			var iv = CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9');
 			var cfg = { mode: CryptoJS.mode.CBC, iv: iv, padding: CryptoJS.pad.Pkcs7 };
@@ -258,13 +273,14 @@ export default class App extends Component {
 			return '';
 		}
 	};
-	isCorrectPasswordHash = (password) => {
+	const isCorrectPasswordHash = (password) => {
 		return (
-			this.deriveHash(password) ===
-			this.decrypt(this.state.encryptedPasswordHash, '9ADE0896B2594184BA36E757C8E6EFD7')
+			deriveHash(password) ===
+			decrypt(state.encryptedPasswordHash, '9ADE0896B2594184BA36E757C8E6EFD7')
 		);
 	};
-	loginHardwareWallet = async (ledger, trezor) => {
+
+	const loginHardwareWallet = async (ledger, trezor) => {
 		var addresses = [];
 		if (ledger) {
 			const result = await ledger.getWalletPublicKey("44'/5'/0'/0/0");
@@ -274,7 +290,9 @@ export default class App extends Component {
 			// Show first unused address, the rest (trezor.unusedAddresses) is used once this is used
 			addresses.push(trezor.address);
 		}
-		this.setState({
+
+		setState({
+			...state,
 			ledger,
 			trezor,
 			hdSeedE: 'h',
@@ -285,18 +303,21 @@ export default class App extends Component {
 			mode: '',
 			rememberPassword: '',
 		});
+
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('addresses', addresses.join(' '));
 	};
-	createWallet = (newSeed, password) => {
+
+	const createWallet = (newSeed, password) => {
 		var newAddressBalances = {};
 		newAddressBalances[
 			newSeed.toHDPrivateKey().derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()
 		] = 0;
 
-		var encryptedHdSeed = this.encrypt(newSeed.toString(), password);
-		var encryptedPasswordHash = this.getEncryptedPasswordHash(password);
-		this.setState({
+		var encryptedHdSeed = encrypt(newSeed.toString(), password);
+		var encryptedPasswordHash = getEncryptedPasswordHash(password);
+		setState({
+			...state,
 			ledger: undefined,
 			trezor: undefined,
 			hdSeedE: encryptedHdSeed,
@@ -310,26 +331,32 @@ export default class App extends Component {
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('encryptedPasswordHash', encryptedPasswordHash);
 		localStorage.setItem('hdSeedE', encryptedHdSeed);
-		this.updateLocalStorageAddressesAndTotalBalance();
+		updateLocalStorageAddressesAndTotalBalance();
 	};
-	logout = (deleteAll) => {
+
+	const logout = (deleteAll) => {
 		localStorage.removeItem('lastLoginTime');
 		localStorage.removeItem('encryptedPasswordHash');
+
 		if (deleteAll) {
 			localStorage.removeItem('hdSeedE');
 			localStorage.removeItem('addressBalances');
-			this.setState({ addressBalances: {} });
+			localStorage.removeItem('totalBalance');
+			setState({ ...state, addressBalances: {} });
 		}
-		localStorage.removeItem('totalBalance');
+
 		window.history.pushState({ urlPath: '/' }, '', '/');
-		this.setState({
+
+		setState({
+			...state,
 			encryptedPasswordHash: undefined,
-			hdSeedE: deleteAll ? undefined : this.state.hdSeedE,
+			hdSeedE: deleteAll ? undefined : state.hdSeedE,
 			mode: '',
 			loading: false,
 		});
 	};
-	showNumber = (amount, decimals) => {
+
+	const showNumber = (amount, decimals) => {
 		var oldResult;
 		var powerOf10 = 10 ** decimals;
 		var result = parseFloat(Math.round(amount * powerOf10) / powerOf10).toFixed(decimals);
@@ -372,76 +399,77 @@ export default class App extends Component {
 
 		return parseFloat(result);
 	};
-	selectExplorer = (change) => {
+
+	const selectExplorer = (change) => {
 		console.log('Selected explorer: ' + change.value);
-		this.setState({ explorer: change.value });
+		setState({ ...state, explorer: change.value });
 	};
-	render() {
-		return (
-			<PageContainer>
-				<Menu
-					onLogout={this.logout}
-					mode={this.state.mode}
-					setMode={this.setMode}
-					hardwareWallet={this.state.ledger || this.state.trezor}
-					isUnlocked={this.state.hdSeedE && this.state.encryptedPasswordHash}
-					setAppCollapsed={(value) => this.setState({ collapsed: value })}
-				/>
-				<MainContainer
-					collapsed={this.state.collapsed || window.innerWidth < 768}
-					isSmallScreen={window.innerWidth < 768}
-				>
-					{this.state.mode === 'domains' &&
-						this.state.hdSeedE &&
-						this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
-						<Domains />
-					) : this.state.mode === 'browser' ? (
-						<Browser />
-					) : this.state.mode === 'settings' ? (
-						<Settings
-							explorer={this.state.explorer}
-							onSelectExplorer={this.selectExplorer}
-							selectedCurrency={this.state.selectedCurrency}
-							setSelectedCurrency={(value) => this.setState({ selectedCurrency: value })}
-						/>
-					) : this.state.mode === 'help' ? (
-						<Help />
-					) : this.state.hdSeedE && this.state.encryptedPasswordHash ? (
-						<Wallet
-							explorer={this.state.explorer}
-							popupDialog={popupDialog}
-							addressBalances={this.state.addressBalances}
-							rememberPassword={this.state.rememberPassword}
-							showNumber={this.showNumber}
-							totalBalance={this.state.totalBalance}
-							priceUsd={this.state.priceUsd}
-							priceEur={this.state.priceEur}
-							priceGbp={this.state.priceGbp}
-							addresses={this.state.addresses}
-							ledger={this.state.ledger}
-							trezor={this.state.trezor}
-							hdSeedE={this.state.hdSeedE}
-							encryptedPasswordHash={this.state.encryptedPasswordHash}
-							isCorrectPasswordHash={this.isCorrectPasswordHash}
-							onDecrypt={this.decrypt}
-							onEncrypt={this.encrypt}
-							setMode={this.setMode}
-							updateAddressBalances={this.updateAddressBalances}
-							selectedCurrency={this.state.selectedCurrency}
-						/>
-					) : (
-						<Login
-							popupDialog={popupDialog}
-							isWalletAvailable={this.state.hdSeedE}
-							setMode={this.setMode}
-							onLoginWallet={this.loginWallet}
-							onCreateWallet={this.createWallet}
-							onLogout={this.logout}
-						/>
-					)}
-					{this.state.loading && <Loader>Alterdot</Loader>}
-				</MainContainer>
-			</PageContainer>
-		);
-	}
+
+	return (
+		<PageContainer>
+			<Menu
+				onLogout={logout}
+				mode={state.mode}
+				setMode={setMode}
+				hardwareWallet={state.ledger || state.trezor}
+				isUnlocked={state.hdSeedE && state.encryptedPasswordHash}
+				setAppCollapsed={(value) => setState({ ...state, collapsed: value })}
+			/>
+			<MainContainer
+				collapsed={state.collapsed || window.innerWidth < 768}
+				isSmallScreen={window.innerWidth < 768}
+			>
+				{state.mode === 'domains' &&
+					state.hdSeedE &&
+					state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
+					<Domains />
+				) : state.mode === 'browser' ? (
+					<Browser />
+				) : state.mode === 'settings' ? (
+					<Settings
+						explorer={state.explorer}
+						onSelectExplorer={selectExplorer}
+						selectedCurrency={state.selectedCurrency}
+						setSelectedCurrency={(value) => setState({ ...state, selectedCurrency: value })}
+					/>
+				) : state.mode === 'help' ? (
+					<Help />
+				) : state.hdSeedE && state.encryptedPasswordHash ? (
+					<Wallet
+						explorer={state.explorer}
+						popupDialog={popupDialog}
+						addressBalances={state.addressBalances}
+						rememberPassword={state.rememberPassword}
+						showNumber={showNumber}
+						totalBalance={state.totalBalance}
+						priceUsd={state.priceUsd}
+						priceEur={state.priceEur}
+						priceGbp={state.priceGbp}
+						ledger={state.ledger}
+						trezor={state.trezor}
+						hdSeedE={state.hdSeedE}
+						encryptedPasswordHash={state.encryptedPasswordHash}
+						isCorrectPasswordHash={isCorrectPasswordHash}
+						onDecrypt={decrypt}
+						onEncrypt={encrypt}
+						setMode={setMode}
+						updateAddressBalances={updateAddressBalances}
+						selectedCurrency={state.selectedCurrency}
+					/>
+				) : (
+					<Login
+						popupDialog={popupDialog}
+						isWalletAvailable={state.hdSeedE}
+						setMode={setMode}
+						onLoginWallet={loginWallet}
+						onCreateWallet={createWallet}
+						onLogout={logout}
+					/>
+				)}
+				{state.loading && <Loader>Alterdot</Loader>}
+			</MainContainer>
+		</PageContainer>
+	);
 }
+
+export default App;

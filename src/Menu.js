@@ -198,7 +198,7 @@ export const Menu = ({ setAppCollapsed, setMode, isUnlocked, onLogout }) => {
 				{!collapsed && <span>Menu</span>}
 			</ToggleButton>
 			<MenuElements collapsed={collapsed}>
-				<ul className={collapsed && 'd-flex flex-column'}>
+				<ul className={collapsed ? 'd-flex flex-column' : ''}>
 					<li>
 						<Link to="/" onClick={() => setMode('')}>
 							<FontAwesomeIcon icon={faWallet} />
