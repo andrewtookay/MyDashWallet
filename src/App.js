@@ -10,7 +10,7 @@ import { Mnemonic } from 'alterdot-lib';
 import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import './all.css';
-import { ADOT_PER_DUFF } from './constants/network.js';
+import { ADOT_PER_DUFF } from './constants/constants.js';
 import { popupDialog } from './constants/styling.js';
 import { Browser } from './pages/Browser';
 
@@ -191,10 +191,10 @@ export default class App extends Component {
 		return window.location.href.endsWith('domains')
 			? 'domains'
 			: window.location.href.endsWith('browser')
-			? 'browser'
-			: window.location.href.endsWith('help') || window.location.href.includes('about')
-			? 'help'
-			: '';
+				? 'browser'
+				: window.location.href.endsWith('help') || window.location.href.includes('about')
+					? 'help'
+					: '';
 	};
 	setMode = (newMode) => {
 		if (this.state.mode === newMode) return;
@@ -392,8 +392,8 @@ export default class App extends Component {
 					isSmallScreen={window.innerWidth < 768}
 				>
 					{this.state.mode === 'domains' &&
-					this.state.hdSeedE &&
-					this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
+						this.state.hdSeedE &&
+						this.state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
 						<Domains />
 					) : this.state.mode === 'browser' ? (
 						<Browser />
@@ -406,9 +406,7 @@ export default class App extends Component {
 						/>
 					) : this.state.mode === 'help' ? (
 						<Help />
-					) : //) : this.state.mode === 'scripthack' ? (
-					//	<ScriptHack />
-					this.state.hdSeedE && this.state.encryptedPasswordHash ? (
+					) : this.state.hdSeedE && this.state.encryptedPasswordHash ? (
 						<Wallet
 							explorer={this.state.explorer}
 							popupDialog={popupDialog}

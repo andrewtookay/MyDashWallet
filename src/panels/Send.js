@@ -6,7 +6,7 @@ import { NotificationManager } from 'react-notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQrcode } from '@fortawesome/free-solid-svg-icons';
 import SkyLight from 'react-skylight';
-import * as constants from '../constants/network.js';
+import * as constants from '../constants/constants.js';
 
 var txFee = 2260 * constants.ADOT_PER_DUFF;
 
@@ -246,7 +246,6 @@ export const Send = (props) => {
 				NotificationManager.info('New balance: ' + props.showAlterdotNumber(newBalance));
 				successSendDialog.current.show();
 
-				console.log(props.addresses, destinationAddress);
 				props.addTransaction({
 					id: ret.txid,
 					amountChange: amountChange,
@@ -254,10 +253,10 @@ export const Send = (props) => {
 					confirmations: 0,
 					size: txFee * 10000000, // 10000 satoshis/kb and size is in bytes
 					fees: txFee,
-					txlock: true,
+					txlock: false,
 				});
 
-				props.balanceCheck(); // update balances
+				props.updateAllBalances();
 			})
 			.catch(function (serverError) {
 				NotificationManager.error('Server Error!');

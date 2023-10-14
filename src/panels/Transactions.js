@@ -57,11 +57,10 @@ export const Transactions = (props) => {
 					<div className="colDate">Date</div>
 					<div className="colAlterdot">ADOT</div>
 					<div className="colFiat">{props.selectedCurrency}</div>
-					<div className="colConfirmations">Confirmations</div>
 				</div>
 			</div>
 			{renderAllTransactions(
-				props.transactions.sort((a, b) => b.time - a.time),
+				props.transactions,
 				true
 			)}
 		</div>

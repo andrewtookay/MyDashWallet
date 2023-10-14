@@ -7,7 +7,7 @@ import { Mnemonic } from 'alterdot-lib';
 import SkyLight from 'react-skylight';
 import { NotificationContainer, NotificationManager } from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
-import * as constants from '../constants/network.js';
+import * as constants from '../constants/constants.js';
 
 export const Wallet = ({
 	addressBalances,
@@ -45,7 +45,7 @@ export const Wallet = ({
 	const displayIncomingTxNotification = useRef(false);
 
 	useEffect(() => {
-		const balanceCheckInterval = setInterval(() => balanceCheck(), 60000);
+		const balanceCheckInterval = setInterval(() => balanceCheck(), 60000); // TODO_ADOT_HIGH each 200000 miliseconds
 
 		return () => {
 			clearInterval(balanceCheckInterval);
@@ -78,8 +78,6 @@ export const Wallet = ({
 	}, [Object.keys(addressBalances).length]);
 
 	const addTransaction = (tx) => {
-		// If we already have this tx, there is nothing to do, new ones are added on top
-		for (var existingTx of transactions) if (existingTx.id === tx.id) return;
 		setTransactions((prevTransactions) => [tx, ...prevTransactions]);
 
 		if (tx.amountChange > 0 && tx.amountChange !== lastAmountChange) {
@@ -99,7 +97,7 @@ export const Wallet = ({
 	};
 
 	const fillTransactionsFromAddresses = (addresses) => {
-		fillTransactionsFromAddressesFromTo(addresses, 0, 50);
+		fillTransactionsFromAddressesFromTo(addresses, 0, constants.TX_PAGE_SIZE);
 	}
 
 	const fillTransactionsFromAddressesFromTo = (addresses, from, to) => {
@@ -118,21 +116,40 @@ export const Wallet = ({
 			.then((response) => response.json())
 			.then((data) => {
 				for (const tx of data.items) {
-					const time = new Date(tx['time'] * 1000);
-					const vin = tx['vin'];
+					const existingTx = transactions.find(existingTx => existingTx.id === tx.txid);
 
-					var amountChange = 0;
+					if (existingTx) {
+						if (existingTx.confirmations === 0 && tx.confirmations > 0) {
+							let updatedTx = { ...existingTx };
+							updatedTx.time = new Date(tx['time'] * 1000);
+							updatedTx.confirmations = tx.confirmations;
+							updatedTx.txlock = tx.txlock;
+
+							setTransactions(prevTransactions => {
+								let updatedTxs = [...prevTransactions];
+								let index = prevTransactions.indexOf(existingTx);
+
+								updatedTxs[index] = updatedTx;
+								return updatedTxs;
+							});
+						}
+
+						continue;
+					}
+
+					let amountChange = 0;
+					const vin = tx.vin;
 					for (var i = 0; i < vin.length; i++)
-						if (isOwnAddress(vin[i]['addr'], addresses)) amountChange -= parseFloat(vin[i]['value']);
-					const vout = tx['vout'];
+						if (isOwnAddress(vin[i].addr, addresses)) amountChange -= parseFloat(vin[i].value);
+					const vout = tx.vout;
 					for (var j = 0; j < vout.length; j++)
-						if (isOwnAddress(vout[j]['scriptPubKey']['addresses'][0], addresses))
-							amountChange += parseFloat(vout[j]['value']);
+						if (isOwnAddress(vout[j].scriptPubKey.addresses[0], addresses))
+							amountChange += parseFloat(vout[j].value);
 
 					addTransaction({
 						id: tx.txid,
 						amountChange: amountChange,
-						time: time,
+						time: new Date(tx['time'] * 1000),
 						confirmations: tx.confirmations,
 						size: tx.size,
 						fees: tx.fees,
@@ -140,10 +157,11 @@ export const Wallet = ({
 					});
 				}
 
-				if (data.totalItems > to) {
-					fillTransactionsFromAddressesFromTo(addresses, from + 50, to + 50);
+				if (data.totalItems > to && data.totalItems > transactions.length) {
+					fillTransactionsFromAddressesFromTo(addresses, from + constants.TX_PAGE_SIZE, to + constants.TX_PAGE_SIZE);
 				} else {
 					displayIncomingTxNotification.current = true;
+					setTransactions((prevTransactions) => [].concat(prevTransactions).sort((a, b) => b.time - a.time));
 				}
 			});
 	};
@@ -152,9 +170,12 @@ export const Wallet = ({
 		return addresses.includes(addressToCheck) || Object.keys(addressBalances).includes(addressToCheck);
 	};
 
-	// Loops through all known Alterdot addresses and checks the balance and sums up to total amount we got
-	const balanceCheck = () => {
+	const updateAllBalances = () => {
 		updateBalances(Object.keys(addressBalances));
+	};
+
+	const balanceCheck = () => {
+		updateAllBalances();
 		fillTransactionsFromAddresses(Object.keys(addressBalances));
 	};
 
@@ -165,7 +186,7 @@ export const Wallet = ({
 
 	const updateBalances = (addresses) => {
 		addresses.map(address => {
-			// TODO_ADOT_HIGH too expensive
+			// TODO_ADOT_HIGH too expensive, implement getAddressBalance with balance for each address in core
 			fetch(`https://${explorer}/insight-api/addr/${address}`, {
 				mode: 'cors',
 				cache: 'no-cache',
@@ -292,7 +313,7 @@ export const Wallet = ({
 					setRememberedPassword={(rememberPassword) =>
 						setState({ ...state, password: rememberPassword })
 					}
-					balanceCheck={balanceCheck}
+					updateAllBalances={updateAllBalances}
 					isValidAlterdotAddress={isValidAlterdotAddress}
 					updateBalanceAddressStorage={updateBalanceAddressStorage}
 				/>
