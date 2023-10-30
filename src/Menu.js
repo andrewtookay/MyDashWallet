@@ -24,8 +24,8 @@ const Container = styled.div`
 	position: relative;
 	z-index: 2;
 	float: none;
-	display: inline-block;
-	vertical-align: top;
+	display: flex;
+	flex-flow: column;
 	color: white;
 	padding-left: ${(props) => (props.collapsed ? '0' : '10px')};
 	padding-right: ${(props) => (props.collapsed ? '0' : '10px')};

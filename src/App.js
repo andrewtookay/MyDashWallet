@@ -8,16 +8,16 @@ import { Login } from './pages/Login';
 import CryptoJS from 'crypto-js';
 import { Mnemonic } from 'alterdot-lib';
 import styled from 'styled-components';
-import './all.css';
-import { ADOT_PER_DUFF } from './constants/constants.js';
 import { popupDialog } from './constants/styling.js';
 import { Browser } from './pages/Browser';
+import './all.css';
 
 const PageContainer = styled.div`
 	background: linear-gradient(to top right, #ed5a2d, #c1616e);
 	border-radius: 40px;
-	height: 88vh;
-	width: 88vw;
+	display: inherit;
+	height: ${(props) => !props.isSmallScreen ? "max(88vh, 800px)" : "fit-content"};
+	width: max(88vw, 1200px);
 	@media screen and (max-width: 1200px) {
 		.register_mn_otr {
 			position: relative;
@@ -59,51 +59,7 @@ const Loader = styled.div`
 `;
 
 function App() {
-	const [state, setState] = useState(() => {
-		var lastLoginTime = localStorage.getItem('lastLoginTime');
-		var encryptedPasswordHash = localStorage.getItem('encryptedPasswordHash');
-		var hdSeedE = localStorage.getItem('hdSeedE');
-
-		var yesterday = new Date();
-		yesterday.setDate(yesterday.getDate() - 1);
-
-		// Keep cache maximum 24 hours!
-		if (
-			lastLoginTime &&
-			new Date(parseInt(lastLoginTime)) > yesterday &&
-			encryptedPasswordHash &&
-			hdSeedE
-		) {
-			return {
-				selectedCurrency: 'USD',
-				priceUsd: 0.02,
-				priceEur: 0.018,
-				priceGbp: 0.015,
-				priceBtc: 0.0000004,
-				addressBalances: {},
-				totalBalance: 0,
-				encryptedPasswordHash: encryptedPasswordHash,
-				hdSeedE: hdSeedE,
-				loading: false,
-				mode: getModeFromUrl(),
-				collapsed: window.innerWidth < 768,
-				explorer: 'insight.alterdot.network',
-			};
-		} else
-			return {
-				selectedCurrency: 'USD',
-				priceUsd: 0.02,
-				priceEur: 0.018,
-				priceGbp: 0.015,
-				priceBtc: 0.0000004,
-				addressBalances: {},
-				totalBalance: 0,
-				hdSeedE: hdSeedE, // allows login from stored encrypted seed, password is unknown so it must match the hash
-				mode: getModeFromUrl(),
-				collapsed: window.innerWidth < 768,
-				explorer: 'insight.alterdot.network',
-			};
-	});
+	const [state, setState] = useState(getInitialState());
 
 	useEffect(() => {
 		window.onpopstate = () => {
@@ -113,13 +69,51 @@ function App() {
 			if (state.mode !== getModeFromUrl()) setMode(getModeFromUrl());
 		};
 
-		restoreAddressesAndTotalBalance();
-
 		return () => {
 			window.onpopstate = null;
 			window.onpushstate = null;
 		}
 	}, []);
+
+	function getInitialState() {
+		const lastLoginTime = localStorage.getItem('lastLoginTime');
+		const encryptedPasswordHash = localStorage.getItem('encryptedPasswordHash');
+		const hdSeedE = localStorage.getItem('hdSeedE');
+
+		const baseState = {
+			selectedCurrency: 'USD',
+			priceUsd: 0.02,
+			priceEur: 0.018,
+			priceGbp: 0.015,
+			priceBtc: 0.0000004,
+			hdSeedE: hdSeedE,
+			mode: getModeFromUrl(),
+			collapsed: window.innerWidth < 768,
+			explorer: 'insight.alterdot.network'
+		}
+
+		const yesterday = new Date();
+		yesterday.setDate(yesterday.getDate() - 1);
+
+		// Keep cache maximum 24 hours!
+		if (lastLoginTime &&
+			new Date(parseInt(lastLoginTime)) > yesterday &&
+			encryptedPasswordHash && hdSeedE
+		) {
+			const { cachedAddressBalances, cachedTotalBalance } = getCachedAddressesAndTotalBalance();
+			return {
+				...baseState,
+				addressBalances: cachedAddressBalances,
+				totalBalance: cachedTotalBalance,
+				encryptedPasswordHash: encryptedPasswordHash
+			};
+		} else
+			return {
+				...baseState,
+				addressBalances: {},
+				totalBalance: 0,
+			};
+	};
 
 	const updateLocalStorageAddressesAndTotalBalance = () => {
 		var totalAmount = 0;
@@ -140,15 +134,12 @@ function App() {
 		localStorage.setItem('totalBalance', totalAmount.toFixed(8));
 	};
 
-	// TODO_ADOT_HIGH move to constructor
-	const restoreAddressesAndTotalBalance = () => {
-		// Check if we were on this address the last time too, then we can use cached data
+	function getCachedAddressesAndTotalBalance() {
 		var cachedAddressBalances = localStorage.getItem('addressBalances');
 		var cachedTotalBalance = localStorage.getItem('totalBalance');
-		//https://stackoverflow.com/questions/1208222/how-to-do-associative-array-hashing-in-javascript
 		var restoredAddressBalances = {};
 		var restoredTotalBalance = 0;
-		// Was cached and still on the same wallet as last time? Then restore all known address balances.
+
 		if (cachedAddressBalances) {
 			var parts = cachedAddressBalances.split('|');
 			for (var i = 0; i < parts.length / 2; i++)
@@ -158,9 +149,11 @@ function App() {
 					restoredTotalBalance += balance;
 				}
 		}
+
 		console.log('restoredAddressBalances', restoredAddressBalances);
 		restoredTotalBalance = parseFloat(restoredTotalBalance.toFixed(8));
 		cachedTotalBalance = parseFloat(cachedTotalBalance);
+
 		if (restoredTotalBalance !== cachedTotalBalance)
 			console.log(
 				'ERROR: Inconsistency in cache: restoredTotalBalance',
@@ -168,8 +161,8 @@ function App() {
 				'cachedTotalBalance',
 				cachedTotalBalance
 			);
-		setState({ ...state, addressBalances: restoredAddressBalances, totalBalance: restoredTotalBalance });
-		// TODO_ADOT_HIGH updateBalanceInterval = setInterval(() => balanceCheck(), 20000);
+
+		return { cachedAddressBalances: restoredAddressBalances, cachedTotalBalance: restoredTotalBalance };
 	};
 
 	// TODO_ADOT_LOW might become expensive for many addresses with a lot of activity
@@ -222,8 +215,8 @@ function App() {
 		var addressBalances = {};
 		addressBalances[xpriv.derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()] = 0;
 
-		setState({
-			...state,
+		setState((prevState) => ({
+			...prevState,
 			ledger: undefined,
 			trezor: undefined,
 			encryptedPasswordHash: encryptedPasswordHash,
@@ -231,14 +224,19 @@ function App() {
 			loading: false,
 			mode: '',
 			rememberPassword: password,
-		});
+		}));
 
-		restoreAddressesAndTotalBalance();
+		const { cachedAddressBalances, cachedTotalBalance } = getCachedAddressesAndTotalBalance();
+		setState((prevState) => ({ ...prevState, addressBalances: cachedAddressBalances, totalBalance: cachedTotalBalance }));
 
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('encryptedPasswordHash', encryptedPasswordHash);
 		updateLocalStorageAddressesAndTotalBalance();
 	};
+
+	useEffect(() => {
+		console.log(state);
+	}, [state]);
 
 	const getEncryptedPasswordHash = (password) => {
 		// The password is never stored, we derive it and only check if the hash is equal
@@ -280,34 +278,6 @@ function App() {
 		);
 	};
 
-	const loginHardwareWallet = async (ledger, trezor) => {
-		var addresses = [];
-		if (ledger) {
-			const result = await ledger.getWalletPublicKey("44'/5'/0'/0/0");
-			addresses.push(result.bitcoinAddress);
-		} else {
-			for (var used of trezor.usedAddresses) addresses.push(used.address);
-			// Show first unused address, the rest (trezor.unusedAddresses) is used once this is used
-			addresses.push(trezor.address);
-		}
-
-		setState({
-			...state,
-			ledger,
-			trezor,
-			hdSeedE: 'h',
-			encryptedPasswordHash: 'w',
-			addresses,
-			totalBalance: trezor ? trezor.balance * ADOT_PER_DUFF : 0,
-			loading: false,
-			mode: '',
-			rememberPassword: '',
-		});
-
-		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
-		localStorage.setItem('addresses', addresses.join(' '));
-	};
-
 	const createWallet = (newSeed, password) => {
 		var newAddressBalances = {};
 		newAddressBalances[
@@ -335,25 +305,29 @@ function App() {
 	};
 
 	const logout = (deleteAll) => {
-		localStorage.removeItem('lastLoginTime');
-		localStorage.removeItem('encryptedPasswordHash');
-
 		if (deleteAll) {
 			localStorage.removeItem('hdSeedE');
 			localStorage.removeItem('addressBalances');
 			localStorage.removeItem('totalBalance');
-			setState({ ...state, addressBalances: {} });
+			
+			setState((prevState) => ({
+				...prevState,
+				addressBalances: {},
+				hdSeedE: undefined,
+			}));
 		}
 
-		window.history.pushState({ urlPath: '/' }, '', '/');
+		localStorage.removeItem('lastLoginTime');
+		localStorage.removeItem('encryptedPasswordHash');
 
-		setState({
-			...state,
+		setState((prevState) => ({
+			...prevState,
 			encryptedPasswordHash: undefined,
-			hdSeedE: deleteAll ? undefined : state.hdSeedE,
 			mode: '',
 			loading: false,
-		});
+		}));
+
+		window.history.pushState({ urlPath: '/' }, '', '/');
 	};
 
 	const showNumber = (amount, decimals) => {
