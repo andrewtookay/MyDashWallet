@@ -58,6 +58,12 @@ const Loader = styled.div`
 	padding-left: 25px;
 `;
 
+const CRYPTO_CONFIG = { 
+	mode: CryptoJS.mode.CBC,
+	iv: CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9'),
+	padding: CryptoJS.pad.Pkcs7
+};
+
 function App() {
 	const [state, setState] = useState(getInitialState());
 
@@ -115,76 +121,76 @@ function App() {
 			};
 	};
 
-	const updateLocalStorageAddressesAndTotalBalance = () => {
-		var totalAmount = 0;
-		var cachedText = '';
-		for (var address of Object.keys(state.addressBalances))
+	function updateLocalStorageAddressesAndTotalBalance() {
+		let totalAmount = 0;
+		let addressBalancesStr = '';
+
+		for (const address of Object.keys(state.addressBalances)) {
 			if (isValidAlterdotAddress(address)) {
-				var amount = state.addressBalances[address];
+				const amount = state.addressBalances[address];
 				totalAmount += amount;
-				cachedText += address + '|' + amount + '|';
+				addressBalancesStr += address + '|' + amount + '|';
 			}
-		localStorage.setItem('addressBalances', cachedText);
-		if (parseFloat(totalAmount.toFixed(8)) !== state.totalBalance)
-			console.log(
-				'Calculated total balance of addresses different from state.',
-				totalAmount.toFixed(8),
-				state.totalBalance
-			);
+		}
+
+		if (parseFloat(totalAmount.toFixed(8)) !== state.totalBalance) {
+			console.error(`Computed total balance of addresses (${totalAmount.toFixed(8)}) different from state balance (${state.totalBalance}).`);
+		}
+
+		localStorage.setItem('addressBalances', addressBalancesStr);
 		localStorage.setItem('totalBalance', totalAmount.toFixed(8));
 	};
 
 	function getCachedAddressesAndTotalBalance() {
-		var cachedAddressBalances = localStorage.getItem('addressBalances');
-		var cachedTotalBalance = localStorage.getItem('totalBalance');
-		var restoredAddressBalances = {};
-		var restoredTotalBalance = 0;
+		const storedAddressBalances = localStorage.getItem('addressBalances');
+		const cachedAddressBalances = {};
+		let storedTotalBalance = localStorage.getItem('totalBalance');
+		let cachedTotalBalance = 0;
 
-		if (cachedAddressBalances) {
-			var parts = cachedAddressBalances.split('|');
-			for (var i = 0; i < parts.length / 2; i++)
+		if (storedAddressBalances) {
+			const parts = storedAddressBalances.split('|');
+			for (let i = 0; i < parts.length / 2; i++)
 				if (parts[i * 2].length > 0) {
-					var balance = parseFloat(parts[i * 2 + 1]);
-					restoredAddressBalances[parts[i * 2]] = balance;
-					restoredTotalBalance += balance;
+					const balance = parseFloat(parts[i * 2 + 1]);
+					cachedAddressBalances[parts[i * 2]] = balance;
+					cachedTotalBalance += balance;
 				}
 		}
 
-		console.log('restoredAddressBalances', restoredAddressBalances);
-		restoredTotalBalance = parseFloat(restoredTotalBalance.toFixed(8));
-		cachedTotalBalance = parseFloat(cachedTotalBalance);
+		cachedTotalBalance = parseFloat(cachedTotalBalance.toFixed(8));
+		storedTotalBalance = parseFloat(storedTotalBalance);
 
-		if (restoredTotalBalance !== cachedTotalBalance)
-			console.log(
-				'ERROR: Inconsistency in cache: restoredTotalBalance',
-				restoredTotalBalance,
-				'cachedTotalBalance',
-				cachedTotalBalance
-			);
+		if (cachedTotalBalance !== storedTotalBalance) {
+			console.error(`Inconsistency in cache: the stored total balance (${storedTotalBalance}) is different from the computed stored total balance (${storedTotalBalance})`);
+		}
 
-		return { cachedAddressBalances: restoredAddressBalances, cachedTotalBalance: restoredTotalBalance };
+		return { cachedAddressBalances: cachedAddressBalances, cachedTotalBalance: cachedTotalBalance };
 	};
 
-	// TODO_ADOT_LOW might become expensive for many addresses with a lot of activity
-	const updateAddressBalances = (newAddressBalances) => {
+	function updateAddressBalances(newAddressBalances) {
 		setState((prevState) => {
-			let addressBalances = Object.assign({}, prevState.addressBalances);
+			const addressBalances = Object.assign({}, prevState.addressBalances);
 			let totalBalance = prevState.totalBalance;
-			// TODO_ADOT_MEDIUM check for negative values
-			for (var address of Object.keys(newAddressBalances)) {
-				if (typeof addressBalances[address] === 'number' && !isNaN(addressBalances[address]))
+
+			for (const address of Object.keys(newAddressBalances)) {
+				if (typeof addressBalances[address] === 'number' && !isNaN(addressBalances[address])) {
 					totalBalance = totalBalance + newAddressBalances[address] - addressBalances[address];
-				else totalBalance = totalBalance + newAddressBalances[address];
+				} else {
+					totalBalance = totalBalance + newAddressBalances[address];
+				}
+
 				addressBalances[address] = newAddressBalances[address];
 			}
+
 			totalBalance = parseFloat(totalBalance.toFixed(8));
 			return { ...prevState, addressBalances: addressBalances, totalBalance: totalBalance };
 		});
+
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
-		updateLocalStorageAddressesAndTotalBalance(); // TODO_ADOT_HIGH do on interval
+		updateLocalStorageAddressesAndTotalBalance();
 	};
 
-	const isValidAlterdotAddress = (address) => {
+	function isValidAlterdotAddress(address) {
 		return address && address.length >= 34 && (address[0] === 'C' || address[0] === '5');
 	};
 
@@ -198,22 +204,31 @@ function App() {
 					: '';
 	};
 
-	const setMode = (newMode) => {
-		if (state.mode === newMode) return;
+	function setMode(newMode) {
+		if (state.mode === newMode) {
+			return;
+		}
+		
 		setState({ ...state, mode: newMode });
-		if (!window.location.href.endsWith(newMode))
-			window.history.replaceState(null, 'MyAlterdotWallet - ' + newMode, newMode);
+		
+		if (!window.location.href.endsWith(newMode)) {
+			window.history.replaceState(null, 'a.wallet - ' + newMode, newMode);
+		}
 	};
 
-	const loginWallet = (password) => {
-		if (!state.hdSeedE) return 'No wallet available to unlock!';
-		var encryptedPasswordHash = getEncryptedPasswordHash(password);
-		var decrypted = decrypt(state.hdSeedE, password);
-		if (!decrypted) return 'Invalid wallet password!';
-		var mnemonic = new Mnemonic(decrypted);
-		var xpriv = mnemonic.toHDPrivateKey();
-		var addressBalances = {};
-		addressBalances[xpriv.derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()] = 0;
+	function loginWallet(password) {
+		if (!state.hdSeedE) {
+			return 'No wallet available to unlock!';
+		}
+
+		const encryptedPasswordHash = getEncryptedPasswordHash(password);
+		const decrypted = decrypt(state.hdSeedE, password);
+		
+		if (!decrypted) {
+			return 'Invalid wallet password!';
+		}
+
+		const { addressBalances, totalBalance } = getInitialAddressesAndTotalBalance(decrypted);
 
 		setState((prevState) => ({
 			...prevState,
@@ -221,71 +236,75 @@ function App() {
 			trezor: undefined,
 			encryptedPasswordHash: encryptedPasswordHash,
 			addressBalances: addressBalances,
+			totalBalance: totalBalance,
 			loading: false,
 			mode: '',
 			rememberPassword: password,
 		}));
 
-		const { cachedAddressBalances, cachedTotalBalance } = getCachedAddressesAndTotalBalance();
-		setState((prevState) => ({ ...prevState, addressBalances: cachedAddressBalances, totalBalance: cachedTotalBalance }));
-
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('encryptedPasswordHash', encryptedPasswordHash);
 		updateLocalStorageAddressesAndTotalBalance();
+
+		function getInitialAddressesAndTotalBalance(decrypted) {
+			const { cachedAddressBalances, cachedTotalBalance } = getCachedAddressesAndTotalBalance();
+
+			if (Object.keys(cachedAddressBalances).length > 0) {
+				return { addressBalances: cachedAddressBalances, totalBalance: cachedTotalBalance };
+			}
+
+			const mnemonic = new Mnemonic(decrypted);
+			const xpriv = mnemonic.toHDPrivateKey();
+
+			const addressBalances = {};
+			addressBalances[xpriv.derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()] = 0;
+
+			return { addressBalances: addressBalances, totalBalance: 0 };
+		}
 	};
 
-	useEffect(() => {
-		console.log(state);
-	}, [state]);
-
-	const getEncryptedPasswordHash = (password) => {
+	function getEncryptedPasswordHash(password) {
 		// The password is never stored, we derive it and only check if the hash is equal
-		var passwordHash = deriveHash(password);
+		const passwordHash = deriveHash(password);
 		return encrypt(passwordHash, '9ADE0896B2594184BA36E757C8E6EFD7');
 	};
 
-	const deriveHash = (password) => {
+	function deriveHash(password) {
 		return CryptoJS.SHA256(password).toString();
 	};
 
-	const encrypt = (text, key) => {
+	function encrypt(text, key) {
 		try {
-			var iv = CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9');
-			var cfg = { mode: CryptoJS.mode.CBC, iv: iv, padding: CryptoJS.pad.Pkcs7 };
-			var ciphertext = CryptoJS.AES.encrypt(text, key, cfg);
-			return ciphertext.toString();
+			return CryptoJS.AES.encrypt(text, key, CRYPTO_CONFIG).toString();
 		} catch (err) {
 			console.log(err);
 			return '';
 		}
 	};
 
-	const decrypt = (encryptedData, key) => {
+	function decrypt(encryptedData, key) {
 		try {
-			var iv = CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9');
-			var cfg = { mode: CryptoJS.mode.CBC, iv: iv, padding: CryptoJS.pad.Pkcs7 };
-			var decrypted = CryptoJS.AES.decrypt(encryptedData, key, cfg);
-			return decrypted.toString(CryptoJS.enc.Utf8);
+			return CryptoJS.AES.decrypt(encryptedData, key, CRYPTO_CONFIG).toString(CryptoJS.enc.Utf8);
 		} catch (err) {
 			console.log(err);
 			return '';
 		}
 	};
-	const isCorrectPasswordHash = (password) => {
+
+	function isCorrectPasswordHash(password) {
 		return (
 			deriveHash(password) ===
 			decrypt(state.encryptedPasswordHash, '9ADE0896B2594184BA36E757C8E6EFD7')
 		);
 	};
 
-	const createWallet = (newSeed, password) => {
-		var newAddressBalances = {};
-		newAddressBalances[
-			newSeed.toHDPrivateKey().derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()
-		] = 0;
+	function createWallet(newSeed, password) {
+		const newAddressBalances = {};
+		newAddressBalances[newSeed.toHDPrivateKey().derive("m/44'/5'/0'/0/0").privateKey.toAddress().toString()] = 0;
 
-		var encryptedHdSeed = encrypt(newSeed.toString(), password);
-		var encryptedPasswordHash = getEncryptedPasswordHash(password);
+		const encryptedHdSeed = encrypt(newSeed.toString(), password);
+		const encryptedPasswordHash = getEncryptedPasswordHash(password);
+
 		setState({
 			...state,
 			ledger: undefined,
@@ -298,13 +317,15 @@ function App() {
 			mode: '',
 			rememberPassword: password,
 		});
+
 		localStorage.setItem('lastLoginTime', new Date().getTime().toString());
 		localStorage.setItem('encryptedPasswordHash', encryptedPasswordHash);
 		localStorage.setItem('hdSeedE', encryptedHdSeed);
+
 		updateLocalStorageAddressesAndTotalBalance();
 	};
 
-	const logout = (deleteAll) => {
+	function logout(deleteAll) {
 		if (deleteAll) {
 			localStorage.removeItem('hdSeedE');
 			localStorage.removeItem('addressBalances');
@@ -330,51 +351,21 @@ function App() {
 		window.history.pushState({ urlPath: '/' }, '', '/');
 	};
 
-	const showNumber = (amount, decimals) => {
-		var oldResult;
-		var powerOf10 = 10 ** decimals;
-		var result = parseFloat(Math.round(amount * powerOf10) / powerOf10).toFixed(decimals);
-
-		if (decimals === 3) {
-			oldResult = parseFloat(Math.round(amount * 1000) / 1000).toFixed(decimals);
-		} else if (decimals === 4) {
-			oldResult = parseFloat(Math.round(amount * 10000) / 10000).toFixed(decimals);
-			// If we have more than 1 leading digits before the . remove the last digit after the dot
-			if (oldResult.length > 6 && amount > 0)
-				oldResult = oldResult.substring(0, oldResult.length - 1);
-		} else if (decimals === 5) {
-			oldResult = parseFloat(Math.round(amount * 100000) / 100000).toFixed(decimals);
-			// If we have more than 1 leading digits before the . remove the last digit after the dot
-			if (oldResult.length > 7 && amount > 0)
-				oldResult = oldResult.substring(0, oldResult.length - 1);
-		} else if (decimals === 6)
-			oldResult = parseFloat(Math.round(amount * 1000000) / 1000000).toFixed(decimals);
-		else if (decimals === 7)
-			oldResult = parseFloat(Math.round(amount * 10000000) / 10000000).toFixed(decimals);
-		else if (decimals === 8)
-			oldResult = parseFloat(Math.round(amount * 100000000) / 100000000).toFixed(decimals);
-		else oldResult = parseFloat(amount).toFixed(decimals);
-
-		if (result !== oldResult)
-			console.log('showNumber ERROR, new result: ', result, 'old result: ', oldResult);
-
-		// Always cut off the last bunch of zeros (except if we requested 2 decimals for currencies)
+	function showNumber(amount, decimals) {
+		const powerOf10 = 10 ** decimals;
+		let result = parseFloat(Math.round(amount * powerOf10) / powerOf10).toFixed(decimals);
+	  
+		// Remove trailing zeros (except for 2 decimal places for currencies)
 		if (decimals > 2) {
-			for (var i = 0; i < 9; i++) {
-				var isDot = result.endsWith('.');
-				if (result.endsWith('0') || isDot) {
-					result = result.substring(0, result.length - 1);
-					if (isDot) break;
-				} else break;
-			}
+		  	while (result.endsWith('0') || result.endsWith('.')) {
+				result = result.slice(0, -1);
+		 	}
 		}
-
-		if (result === '' || isNaN(result)) return 0;
-
-		return parseFloat(result);
+	  
+		return parseFloat(result) || 0;
 	};
 
-	const selectExplorer = (change) => {
+	function selectExplorer(change) {
 		console.log('Selected explorer: ' + change.value);
 		setState({ ...state, explorer: change.value });
 	};
@@ -395,7 +386,7 @@ function App() {
 			>
 				{state.mode === 'domains' &&
 					state.hdSeedE &&
-					state.encryptedPasswordHash ? ( // TODO_ADOT_HIGH domains page
+					state.encryptedPasswordHash ? (
 					<Domains />
 				) : state.mode === 'browser' ? (
 					<Browser />
