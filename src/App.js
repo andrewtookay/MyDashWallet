@@ -58,7 +58,7 @@ const Loader = styled.div`
 	padding-left: 25px;
 `;
 
-const CRYPTO_CONFIG = { 
+const CRYPTO_CONFIG = {
 	mode: CryptoJS.mode.CBC,
 	iv: CryptoJS.enc.Hex.parse('F2EBAE2CDF804895B5C091D0310169C9'),
 	padding: CryptoJS.pad.Pkcs7
@@ -104,8 +104,7 @@ function App() {
 		// Keep cache maximum 24 hours!
 		if (lastLoginTime &&
 			new Date(parseInt(lastLoginTime)) > yesterday &&
-			encryptedPasswordHash && hdSeedE
-		) {
+			encryptedPasswordHash && hdSeedE) {
 			const { cachedAddressBalances, cachedTotalBalance } = getCachedAddressesAndTotalBalance();
 			return {
 				...baseState,
@@ -208,9 +207,9 @@ function App() {
 		if (state.mode === newMode) {
 			return;
 		}
-		
+
 		setState({ ...state, mode: newMode });
-		
+
 		if (!window.location.href.endsWith(newMode)) {
 			window.history.replaceState(null, 'a.wallet - ' + newMode, newMode);
 		}
@@ -223,7 +222,7 @@ function App() {
 
 		const encryptedPasswordHash = getEncryptedPasswordHash(password);
 		const decrypted = decrypt(state.hdSeedE, password);
-		
+
 		if (!decrypted) {
 			return 'Invalid wallet password!';
 		}
@@ -330,7 +329,7 @@ function App() {
 			localStorage.removeItem('hdSeedE');
 			localStorage.removeItem('addressBalances');
 			localStorage.removeItem('totalBalance');
-			
+
 			setState((prevState) => ({
 				...prevState,
 				addressBalances: {},
@@ -354,14 +353,14 @@ function App() {
 	function showNumber(amount, decimals) {
 		const powerOf10 = 10 ** decimals;
 		let result = parseFloat(Math.round(amount * powerOf10) / powerOf10).toFixed(decimals);
-	  
+
 		// Remove trailing zeros (except for 2 decimal places for currencies)
 		if (decimals > 2) {
-		  	while (result.endsWith('0') || result.endsWith('.')) {
+			while (result.endsWith('0') || result.endsWith('.')) {
 				result = result.slice(0, -1);
-		 	}
+			}
 		}
-	  
+
 		return parseFloat(result) || 0;
 	};
 

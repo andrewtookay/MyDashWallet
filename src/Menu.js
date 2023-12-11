@@ -205,29 +205,6 @@ export const Menu = ({ setAppCollapsed, setMode, isUnlocked, onLogout }) => {
 							<span>{!isUnlocked ? 'Open ' : ''}Wallet</span>
 						</Link>
 					</li>
-					{/*
-						<li>
-							<a href="https://old.mydashwallet.org/mixing">
-								<FontAwesomeIcon icon={faRandom} />
-								<span>Mix</span>
-							</a>
-							unused, and not very helpful <Link to="/mix" onClick={() => setMode('mix')}>
-								<FontAwesomeIcon icon={faRandom} />
-								<span>Mix</span>
-							</Link>
-						</li>
-						<li> TODO_ADOT_FUTURE implement tipping mechanism for light wallets
-							<Link to="/tip" onClick={() => setMode('tip')}>
-								<FontAwesomeIcon icon={faGift} />
-								<span>Tip</span>
-							</Link>
-						</li>
-						TODO: implement on top of dash platform <li>
-							<Link to="/chat" onClick={() => setMode('chat')}>
-								<FontAwesomeIcon icon={faComments} />
-								<span>Chat</span>
-							</Link>
-						</li>*/}
 					<li>
 						<Link to="/domains" onClick={() => setMode('domains')}>
 							<FontAwesomeIcon icon={faTags} />
@@ -252,12 +229,6 @@ export const Menu = ({ setAppCollapsed, setMode, isUnlocked, onLogout }) => {
 							<span>Help</span>
 						</Link>
 					</li>
-					{/*<li>
-							<a href="https://old.mydashwallet.org">
-								<FontAwesomeIcon icon={faSitemap} />
-								<span>Old Website</span>
-							</a>
-						</li>*/}
 					<li style={{ display: isUnlocked ? 'auto' : 'none' }}>
 						<Link to="/" onClick={() => onLogout()}>
 							<FontAwesomeIcon icon={faSignOutAlt} />
@@ -283,22 +254,6 @@ export const Menu = ({ setAppCollapsed, setMode, isUnlocked, onLogout }) => {
 							title="Twitter"
 						/>
 					</a>
-					{/*
-						<a href="https://www.reddit.com/user/mydashwallet/comments/" target="_blank" rel="noopener noreferrer" >
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Reddit_Default.png"
-								hoverImage="/images/SocialMediaIcon_Reddit_Hover.png"
-								title="MyDashWallet on Reddit"
-							/>
-						</a>
-						<a href="https://t.me/MyDashWalletBot" target="_blank" rel="noopener noreferrer">
-							<SocialMediaIcon
-								image="/images/SocialMediaIcon_Telegram_Default.png"
-								hoverImage="/images/SocialMediaIcon_Telegram_Hover.png"
-								title="MyDashWallet on Telegram"
-							/>
-						</a>
-						*/}
 					<a
 						href="https://github.com/Alterdot/web-wallet"
 						target="_blank"
